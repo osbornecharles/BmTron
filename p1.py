@@ -6,6 +6,7 @@ from server import *
 
 media_file_path = "./mediafiles/"
 title = 1
+COMMAND_PORT = 40128
 
 class GameSpace:
     def main(self): 
@@ -69,6 +70,6 @@ if __name__ == "__main__":
     tl = LoopingCall(gs.titleloop)
     tl.start(1/60)
 
-    reactor.listenTCP(40091, DataConnectionFactory())
+    reactor.listenTCP(COMMAND_PORT, ConnectionFactory())
     reactor.run()
 
