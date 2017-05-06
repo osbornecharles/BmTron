@@ -23,7 +23,7 @@ class CommandConnection(Protocol):
     def dataReceived(self,data):
         '''Upon receiving command that home.py connected with client, create data connection'''
         print("Command connection: client player received data from host player: {}".format(data))
-        if (data == "opened_dataport"):
+        if (data.decode() == "opened_dataport"):
             print("Command connection: client player connecting to host player's data port")
             # Create data connection
             reactor.connectTCP("ash.campus.nd.edu", DATA_PORT, DataConnectionFactory(self.factory))
