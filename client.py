@@ -1,7 +1,5 @@
 # Client player
 
-# Mimi Chen (mchen6)
-
 from twisted.internet.protocol import ClientFactory
 from twisted.internet.protocol import Protocol
 from twisted.internet import reactor
