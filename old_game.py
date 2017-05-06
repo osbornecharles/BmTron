@@ -2,6 +2,7 @@ import pygame, sys
 import math
 from twisted.internet.task import LoopingCall
 from twisted.internet import reactor
+from server import *
 
 media_file_path = "./mediafiles/"
 
@@ -133,7 +134,7 @@ class GameSpace:
         self.all_objects.append(self.player1)
         self.all_objects.append(self.player2)
 
-    def loop():
+    def loop(self):
         '''Step 3: Start the game loop
         Step 4: Tick regulation set at 60 seconds'''
         #self.clock.tick(60)     # frame rate is 60 fps
@@ -171,6 +172,6 @@ if __name__ == "__main__":
     # Step 3: Start the game loop using Twisted's Loopin Call
     lc = LoopingCall(gs.loop)
     lc.start(1/60)
-
+    reactor.listenTCP(40091, DataConnectionFactory())
     reactor.run()
 
