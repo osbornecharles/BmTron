@@ -54,7 +54,7 @@ class GameSpace:
                     mouse_pos = pygame.mouse.get_pos()
                     if self.startButton.collidepoint(mouse_pos):
                         title = 0
-                        factory.getConnection().transport.write('Start pressed')
+                        factory.command_connection.transport.write('Start pressed')
 
             self.screen.blit(self.startText, self.textRect)
             self.screen.blit(self.title, self.titleRect)
@@ -68,8 +68,8 @@ class GameSpace:
 if __name__ == "__main__":
     gs = GameSpace()
     gs.main()
-    factory = CommandConnectionFactory
-    reactor.connectTCP(COMMAND_PORT, factory())
+    factory = CommandConnectionFactory()
+    reactor.connectTCP('localhost', COMMAND_PORT, factory)
     reactor.run()
     tl = LoopingCall(gs.titleloop, [factory])
     tl.start(1/60)
