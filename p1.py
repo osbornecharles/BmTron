@@ -5,6 +5,7 @@ from twisted.internet import reactor
 from server import *
 
 media_file_path = "./mediafiles/"
+title = 1
 
 class GameSpace:
     def main(self): 
@@ -39,61 +40,33 @@ class GameSpace:
         self.all_objects = []
 
     def titleloop(self):
-        global tl
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                sys.exit()
-            elif event.type == pygame.KEYDOWN:
-                # Escape key
-                if (event.key == pygame.K_ESCAPE):
+        global title
+        if title:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
                     sys.exit()
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                mouse_pos = pygame.mouse.get_pos()
-                if self.startButton.collidepoint(mouse_pos):
-                    lc = LoopingCall(gs.loop)
-                    lc.start(1/60)
-                    tl.stop()
+                elif event.type == pygame.KEYDOWN:
+                    # Escape key
+                    if (event.key == pygame.K_ESCAPE):
+                        sys.exit()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    mouse_pos = pygame.mouse.get_pos()
+                    if self.startButton.collidepoint(mouse_pos):
+                        title = 0
 
-        self.screen.blit(self.startText, self.textRect)
-        self.screen.blit(self.title, self.titleRect)
-        pygame.display.flip()
+            self.screen.blit(self.startText, self.textRect)
+            self.screen.blit(self.title, self.titleRect)
+            pygame.display.flip()
+        else:
+            print("hello")
+            self.screen.fill(self.black)
+            pygame.display.flip()
                       
 
-    def loop(self):
-        '''Step 3: Start the game loop
-        Step 4: Tick regulation set at 60 seconds'''
-        print('hi')
-
-        # Step 5: Read user input
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                sys.exit()
-            elif event.type == pygame.KEYDOWN:
-                # Escape key
-                if (event.key == pygame.K_ESCAPE):
-                    sys.exit()
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                mouse_pos = pygame.mouse.get_pos()
-
-        # Step 6: Call tick() on each game object
-        for obj in self.all_objects:
-            obj.tick()
-
-        # Step 7: Update screen
-        self.screen.fill(self.black)
-        for obj in reversed(self.all_objects):
-            self.screen.blit(obj.image, obj.rect)
-        pygame.display.flip()
-
-gs = GameSpace()
-t1 = LoopingCall(gs.titleloop)
-
 if __name__ == "__main__":
-    global tl
-    global gs
+    gs = GameSpace()
     gs.main()
-
-    # Step 3: Start the game loop using Twisted's Loopin Call
+    tl = LoopingCall(gs.titleloop)
     tl.start(1/60)
 
     reactor.listenTCP(40091, DataConnectionFactory())
