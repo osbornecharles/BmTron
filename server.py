@@ -46,6 +46,9 @@ class CommandConnectionFactory(ServerFactory):
     def __init__(self):
         self.command_connection = CommandConnection(self)
 
+    def getConnection(self):
+        return self.command_connection
+
     def buildProtocol(self, addr):
         return self.command_connection
 

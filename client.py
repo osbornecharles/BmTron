@@ -59,6 +59,9 @@ class CommandConnectionFactory(ClientFactory):
     def __init__(self):
         self.command_connection = CommandConnection(self)
 
+    def getConnection(self):
+        return self.command_connection
+
     def buildProtocol(self, addr):
         return self.command_connection
 
@@ -76,14 +79,6 @@ class DataConnectionFactory(ClientFactory):
     
     def startedConnecting(self, connector): 
         print("Data connection factory: started connecting with connector: {}".format(connector))
-
-
-
-
-# ======================== REACTOR ============================================
-# Create command connection
-reactor.connectTCP("ash.campus.nd.edu", COMMAND_PORT, CommandConnectionFactory()) 
-reactor.run()
 
 
 '''

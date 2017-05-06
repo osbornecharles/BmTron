@@ -40,20 +40,20 @@ class GameSpace:
 
         self.all_objects = []
 
-    def titleloop(self):
+    def titleloop(self, factory):
         global title
         if title:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     sys.exit()
                 elif event.type == pygame.KEYDOWN:
-                    # Escape key
                     if (event.key == pygame.K_ESCAPE):
                         sys.exit()
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_pos = pygame.mouse.get_pos()
                     if self.startButton.collidepoint(mouse_pos):
                         title = 0
+                        factory.getConnection().transport.write('start pressed')
 
             self.screen.blit(self.startText, self.textRect)
             self.screen.blit(self.title, self.titleRect)
@@ -67,9 +67,9 @@ class GameSpace:
 if __name__ == "__main__":
     gs = GameSpace()
     gs.main()
-    tl = LoopingCall(gs.titleloop)
+    factory = CommandConnectionFactory
+    reactor.listenTCP(COMMAND_PORT, factory())
+    tl = LoopingCall(gs.titleloop, [factory])
     tl.start(1/60)
-
-    reactor.listenTCP(COMMAND_PORT, ConnectionFactory())
     reactor.run()
 
