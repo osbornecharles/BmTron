@@ -38,7 +38,7 @@ class Board():
             print ("\n---------------------------------------------------------------------------------------------------------------------------------")
 
 
-class HostPlayer(pygame.sprite.Sprite):
+class Player(pygame.sprite.Sprite):
     def __init__(self, x, y, image, name, gamespace):
         pygame.sprite.Sprite.__init__(self)
         self.x = x
@@ -111,6 +111,7 @@ class HostPlayer(pygame.sprite.Sprite):
                 self.x += moveAmount
 
     def move_up(self):
+        print("UP")
         if self.currentDirection == 2:
             self.dead = 1
         tup = get_array_pos()
@@ -120,6 +121,7 @@ class HostPlayer(pygame.sprite.Sprite):
         updatePlayer(boardVal)
 
     def move_down(self): 
+        print("DOWN")
         if self.currentDirection == 0:
             self.dead = 1
         tup = get_array_pos()
@@ -129,6 +131,7 @@ class HostPlayer(pygame.sprite.Sprite):
         updatePlayer(boardVal)
 
     def move_left(self): 
+        print("LEFT")
         if self.currentDirection == 1:
             self.dead = 1
         tup = get_array_pos()
@@ -138,6 +141,7 @@ class HostPlayer(pygame.sprite.Sprite):
         updatePlayer(boardVal)
 
     def move_right(self):
+        print("RIGHT")
         if self.currentDirection == 3:
             self.dead = 1
         tup = get_array_pos()
@@ -149,7 +153,7 @@ class HostPlayer(pygame.sprite.Sprite):
     def tick(self):
         pass
 
-class ClientPlayer(pygame.sprite.Sprite):
+class OtherPlayer(pygame.sprite.Sprite):
     def __init__(self, x, y, image, name, gamespace):
         pygame.sprite.Sprite.__init__(self)
         self.x = x
@@ -282,12 +286,12 @@ class GameSpace:
 
         # Host player
         if (self.who == "host"):
-            self.you = HostPlayer(self.width/4, self.height/2, mediafile + "gabe.png", "gabe", self)
-            self.other = ClientPlayer(self.width*3/4, self.height/2, mediafile + "doge.png", "doge", self)
+            self.you = Player(self.width/4, self.height/2, mediafile + "gabe.png", "gabe", self)
+            self.other = OtherPlayer(self.width*3/4, self.height/2, mediafile + "doge.png", "doge", self)
         # Client player
         else:
-            self.you = HostPlayer(self.width*3/4, self.height/2,  mediafile + "doge.png", "doge", self)
-            self.other = ClientPlayer(self.width/4, self.height/2, mediafile + "gabe.png", "gabe", self)
+            self.you = Player(self.width*3/4, self.height/2,  mediafile + "doge.png", "doge", self)
+            self.other = OtherPlayer(self.width/4, self.height/2, mediafile + "gabe.png", "gabe", self)
 
         # List to hold all other game objects
         self.all_objects = [self.you, self.other]
@@ -306,19 +310,26 @@ class GameSpace:
     def gameloop(self):
         print("In game loop")
 
-        if (not self.factory.command_connection.start()):
-            for event in pygame.event.get():
-                # Close pygame
-                if event.type == pygame.QUIT:
+        for event in pygame.event.get():
+            # Close pygame
+            if event.type == pygame.QUIT:
+                self.factory.command_connection.sendEnd()
+                reactor.stop()
+            # Key detection
+            elif event.type == pygame.KEYDOWN:
+                # Escape key to end pygame
+                if (event.key == pygame.K_ESCAPE):
                     self.factory.command_connection.sendEnd()
                     reactor.stop()
-                # Key detection
-                elif event.type == pygame.KEYDOWN:
-                    # Escape key to end pygame
-                    if (event.key == pygame.K_ESCAPE):
-                        self.factory.command_connection.sendEnd()
-                        reactor.stop()
-        
+                elif (event.key == pygame.K_UP):
+                    self.you.move_up()
+                elif (event.key == pygame.K_DOWN):
+                    self.you.move_down()
+                elif (event.key == pygame.K_RIGHT):
+                    self.you.move_right()
+                elif (event.key == pygame.K_LEFT):
+                    self.you.move_left()
+    
         for obj in self.all_objects:
             obj.tick()
 
