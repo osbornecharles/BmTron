@@ -17,6 +17,8 @@ class CommandConnection(Protocol):
     '''Handles command connection between home.py and work.py'''
     def __init__(self, factory): 
         self.factory = factory
+        self.sentStart = 0
+        self.receivedStart = 0
 
     def connectionMade(self):
         print("Command connection: created between host and client players")
@@ -25,6 +27,18 @@ class CommandConnection(Protocol):
         reactor.listenTCP(DATA_PORT, DataConnectionFactory(self.factory)) 
         # Tell client player that the host player is listening on data port
         self.transport.write("opened_dataport".encode())
+
+    def sendStart(self):
+        self.transport.write("Start pressed".encode())
+        self.sentStart = 1
+
+    def dataReceived(self, data):
+        print('got data', data.decode())
+        if(data.decode() == 'Start pressed'):
+            self.receivedStart = 1
+    
+    def start(self):
+        return self.receivedStart and self.sentStart
 
 class DataConnection(Protocol):
     '''Handles data connection between home.py and work.py'''
