@@ -30,13 +30,20 @@ class CommandConnection(Protocol):
         self.transport.write("opened_dataport".encode())
 
     def sendStart(self):
+        print("Command connection: sent start to client")
         self.transport.write("Start pressed".encode())
         self.sentStart = 1
+
+    def sendEnd(self):
+        print("Command connection: sent end to client")
+        self.transport.write("Host quit".encode())
 
     def dataReceived(self, data):
         print('got data', data.decode())
         if(data.decode() == 'Start pressed'):
             self.receivedStart = 1
+        elif (data.decode() == "Client quit"):
+            print("Command connection: client player quit")
     
     def start(self):
         return self.receivedStart and self.sentStart

@@ -11,6 +11,7 @@ log.startLogging(sys.stdout)
 
 COMMAND_PORT = 41128
 DATA_PORT = 42128
+SERVER = "newt.campus.nd.edu"
 
 # ======================= CONNECTIONS =========================================
 class CommandConnection(Protocol):
@@ -28,6 +29,10 @@ class CommandConnection(Protocol):
         print("Command connection: sent start to host")
         self.sentStart = True
         self.transport.write("Start pressed".encode())
+
+    def sendEnd(self):
+        print("Command connection: sent end to host")
+        self.transport.write("Client quit".encode())
     
     def dataReceived(self,data):
         '''Handle received data from host player'''
@@ -37,12 +42,14 @@ class CommandConnection(Protocol):
             print("Command connection: client player connecting to host player's data port")
             # Create data connection
             #self.factory = DataConnectionFactory(self.factory)
-            reactor.connectTCP("ash.campus.nd.edu", DATA_PORT, DataConnectionFactory(self.factory))
+            reactor.connectTCP(SERVER, DATA_PORT, DataConnectionFactory(self.factory))
 
         # Host player clicked "start"
         elif (data.decode() == "Start pressed"):
             print("Command connection: host player pressed start")
             self.receivedStart = True
+        elif (data.decode() == "Host quit"):
+            print("Command connection: host player quit")
 
     def start(self):
         '''Return true only if both the host and the client players clicked "start"'''

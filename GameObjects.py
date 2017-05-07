@@ -34,11 +34,11 @@ class Board():
     def printBoard(self):
         for y in range(len(self.board)):
             for x in range(len(self.board[0])):
-                print("| {} ".format(self.board[y][x]), end = '')
+                print("| {}".format(self.board[y][x]), end = '')
             print ("\n---------------------------------------------------------------------------------------------------------------------------------")
 
 
-class Player(pygame.sprite.Sprite):
+class HostPlayer(pygame.sprite.Sprite):
     def __init__(self, x, y, image, name, gamespace):
         pygame.sprite.Sprite.__init__(self)
         self.x = x
@@ -149,7 +149,7 @@ class Player(pygame.sprite.Sprite):
     def tick(self):
         pass
 
-class OtherPlayer(pygame.sprite.Sprite):
+class ClientPlayer(pygame.sprite.Sprite):
     def __init__(self, x, y, image, name, gamespace):
         pygame.sprite.Sprite.__init__(self)
         self.x = x
@@ -249,11 +249,13 @@ class GameSpace:
             for event in pygame.event.get():
                 # Close pygame
                 if event.type == pygame.QUIT:
+                    self.factory.command_connection.sendEnd()
                     reactor.stop()
                 # Key detection
                 elif event.type == pygame.KEYDOWN:
                     # Escape key to end pygame
                     if (event.key == pygame.K_ESCAPE):
+                        self.factory.command_connection.sendEnd()
                         reactor.stop()
                 # Mouse detection
                 elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -278,12 +280,14 @@ class GameSpace:
         # Set up game objects
         self.board = Board(self)
 
+        # Host player
         if (self.who == "host"):
-            self.you = Player(self.width/4, self.height/2, mediafile + "gabe.png", "gabe", self)
-            self.other = OtherPlayer(self.width*3/4, self.height/2, mediafile + "doge.png", "doge", self)
+            self.you = HostPlayer(self.width/4, self.height/2, mediafile + "gabe.png", "gabe", self)
+            self.other = ClientPlayer(self.width*3/4, self.height/2, mediafile + "doge.png", "doge", self)
+        # Client player
         else:
-            self.you = Player(self.width*3/4, self.height/2,  mediafile + "doge.png", "doge", self)
-            self.other = OtherPlayer(self.width/4, self.height/2, mediafile + "gabe.png", "gabe", self)
+            self.you = HostPlayer(self.width*3/4, self.height/2,  mediafile + "doge.png", "doge", self)
+            self.other = ClientPlayer(self.width/4, self.height/2, mediafile + "gabe.png", "gabe", self)
 
         # List to hold all other game objects
         self.all_objects = [self.you, self.other]
@@ -306,11 +310,13 @@ class GameSpace:
             for event in pygame.event.get():
                 # Close pygame
                 if event.type == pygame.QUIT:
+                    self.factory.command_connection.sendEnd()
                     reactor.stop()
                 # Key detection
                 elif event.type == pygame.KEYDOWN:
                     # Escape key to end pygame
                     if (event.key == pygame.K_ESCAPE):
+                        self.factory.command_connection.sendEnd()
                         reactor.stop()
         
         for obj in self.all_objects:
