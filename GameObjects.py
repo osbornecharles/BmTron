@@ -18,9 +18,9 @@ class Board():
     def putOnBoard(self, thing, x, y):
         print("{} at x = {}, y = {}".format(thing.name, x,y))
         if (thing.name == "gabe"):
-            self.board[y][x] = 1
+            self.board[int(y)][int(x)] = 1
         elif (thing.name == "doge"):
-            self.board[y][x] = 2
+            self.board[int(y)][int(x)] = 2
 
     def deleteFromBoard(self, x, y):
         self.board[y][x] = 0
@@ -28,8 +28,8 @@ class Board():
     def printBoard(self):
         for y in range(len(self.board)):
             for x in range(len(self.board[0])):
-                print("| {} ".format(self.board[y][x]), end = '')
-            print ("\n----------------------------")
+                print("| {}".format(self.board[y][x]), end = '')
+            print ("\n---------------------------------------------------------------------------------------------------------------------------------")
 
 
 class Player(pygame.sprite.Sprite):
@@ -118,6 +118,7 @@ class Player(pygame.sprite.Sprite):
                 self.x += moveAmount
 
     def move_up(self):
+        print("UP")
         if self.currentDirection == 2:
             self.dead = 1
             self.factory.data_connection.sendCollision()
@@ -129,6 +130,7 @@ class Player(pygame.sprite.Sprite):
         updatePlayer(boardVal)
 
     def move_down(self): 
+        print("DOWN")
         if self.currentDirection == 0:
             self.dead = 1
             self.factory.data_connection.sendCollision()
@@ -140,6 +142,7 @@ class Player(pygame.sprite.Sprite):
         updatePlayer(boardVal)
 
     def move_left(self): 
+        print("LEFT")
         if self.currentDirection == 1:
             self.dead = 1
             self.factory.data_connection.sendCollision()
@@ -151,6 +154,7 @@ class Player(pygame.sprite.Sprite):
         updatePlayer(boardVal)
 
     def move_right(self):
+        print("RIGHT")
         if self.currentDirection == 3:
             self.dead = 1
             self.factory.data_connection.sendCollision()
@@ -160,6 +164,9 @@ class Player(pygame.sprite.Sprite):
         boardVal = self.gs.board[tup[1]][tup[0]+1]
         self.currentDirection = 4
         updatePlayer(boardVal)
+
+    def tick(self):
+        pass
 
 class OtherPlayer(pygame.sprite.Sprite):
     def __init__(self, x, y, image, name, gamespace):
@@ -182,7 +189,7 @@ class OtherPlayer(pygame.sprite.Sprite):
     def tick(self):
         '''Send location to other player'''
         # Retrieve data from host player about Player 1
-        dataQueue = self.gs.data_connection.returnData()
+        dataQueue = self.gs.factory.data_connection.returnData()
         while (not dataQueue.empty()):
             data = dataQueue.get().split()
 
@@ -223,6 +230,10 @@ class GameSpace:
 
         # Initialize the game space
         pygame.init()
+        if (self.who == "host"):
+            pygame.display.set_caption("Host player")
+        else:
+            pygame.display.set_caption("Client player")
         self.size = self.width, self.height = 640, 420
         self.black = 0,0,0
         self.screen = pygame.display.set_mode(self.size)
@@ -259,11 +270,13 @@ class GameSpace:
             for event in pygame.event.get():
                 # Close pygame
                 if event.type == pygame.QUIT:
+                    self.factory.command_connection.sendEnd()
                     reactor.stop()
                 # Key detection
                 elif event.type == pygame.KEYDOWN:
                     # Escape key to end pygame
                     if (event.key == pygame.K_ESCAPE):
+                        self.factory.command_connection.sendEnd()
                         reactor.stop()
                 # Mouse detection
                 elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -285,24 +298,27 @@ class GameSpace:
             self.gameScene()
 
     def gameScene(self):
+        '''Actual game!'''
         # Set up game objects
         self.board = Board(self)
 
+        # Host player
         if (self.who == "host"):
-            self.p1 = Player(self.width/4, self.height/2, mediafile + "gabe.png", "gabe", self)
-            self.p2 = OtherPlayer(self.width*3/4, self.height/2, mediafile + "doge.png", "doge", self)
+            self.you = Player(self.width/4, self.height/2, mediafile + "gabe.png", "gabe", self)
+            self.other = OtherPlayer(self.width*3/4, self.height/2, mediafile + "doge.png", "doge", self)
+        # Client player
         else:
-            self.p1 = OtherPlayer(self.width/4, self.height/2, mediafile + "gabe.png", "gabe", self)
-            self.p2 = Player(self.width*3/4, self.height/2, mediafile + "doge.png", "doge", self)
-
-        # Draw players onto screen
-        self.screen.blit(self.p1.image, self.p1.rect)
-        self.screen.blit(self.p2.image, self.p2.rect)
-
-        self.board.printBoard()
+            self.you = Player(self.width*3/4, self.height/2,  mediafile + "doge.png", "doge", self)
+            self.other = OtherPlayer(self.width/4, self.height/2, mediafile + "gabe.png", "gabe", self)
 
         # List to hold all other game objects
-        #self.all_objects = [self.p1, self.p2]
+        self.all_objects = [self.you, self.other]
+
+        # Draw players onto screen
+        self.screen.blit(self.you.image, self.you.rect)
+        self.screen.blit(self.other.image, self.other.rect)
+
+        self.board.printBoard()
 
         # Start game loop
         self.loop = LoopingCall(self.gameloop)
@@ -314,22 +330,25 @@ class GameSpace:
         for event in pygame.event.get():
             # Close pygame
             if event.type == pygame.QUIT:
+                self.factory.command_connection.sendEnd()
                 reactor.stop()
             # Key detection
             elif event.type == pygame.KEYDOWN:
                 # Escape key to end pygame
                 if (event.key == pygame.K_ESCAPE):
+                    self.factory.command_connection.sendEnd()
                     reactor.stop()
-            # Mouse detection
-            elif event.type == pygame.K_UP:
-                self.p1.move_up()
-            elif event.type == pygame.K_DOWN:
-                print('gotit')
-                self.p1.move_down()
-            elif event.type == pygame.K_RIGHT:
-                self.p1.move_right()
-            elif event.type == pygame.K_LEFT:
-                self.p1.move_left()
+                elif (event.key == pygame.K_UP):
+                    self.you.move_up()
+                elif (event.key == pygame.K_DOWN):
+                    self.you.move_down()
+                elif (event.key == pygame.K_RIGHT):
+                    self.you.move_right()
+                elif (event.key == pygame.K_LEFT):
+                    self.you.move_left()
+    
+        for obj in self.all_objects:
+            obj.tick()
 
         self.screen.blit(self.p1.image, self.p1.rect)
         self.screen.blit(self.p2.image, self.p2.rect)

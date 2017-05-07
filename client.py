@@ -7,10 +7,12 @@ from twisted.internet.defer import DeferredQueue
 from twisted.python import log
 from queue import *
 import sys
+import queue 
 log.startLogging(sys.stdout)
 
-COMMAND_PORT = 40128
+COMMAND_PORT = 41128
 DATA_PORT = 42128
+SERVER = "newt.campus.nd.edu"
 
 # ======================= CONNECTIONS =========================================
 class CommandConnection(Protocol):
@@ -28,6 +30,10 @@ class CommandConnection(Protocol):
         print("Command connection: sent start to host")
         self.sentStart = True
         self.transport.write("Start pressed".encode())
+
+    def sendEnd(self):
+        print("Command connection: sent end to host")
+        self.transport.write("Client quit".encode())
     
     def dataReceived(self,data):
         '''Handle received data from host player'''
@@ -36,12 +42,15 @@ class CommandConnection(Protocol):
         if (data.decode() == "opened_dataport"):
             print("Command connection: client player connecting to host player's data port")
             # Create data connection
-            reactor.connectTCP("ash.campus.nd.edu", DATA_PORT, DataConnectionFactory(self.factory))
+            #self.factory = DataConnectionFactory(self.factory)
+            reactor.connectTCP(SERVER, DATA_PORT, DataConnectionFactory(self.factory))
 
         # Host player clicked "start"
         elif (data.decode() == "Start pressed"):
             print("Command connection: host player pressed start")
             self.receivedStart = True
+        elif (data.decode() == "Host quit"):
+            print("Command connection: host player quit")
 
     def start(self):
         '''Return true only if both the host and the client players clicked "start"'''
@@ -53,7 +62,7 @@ class DataConnection(Protocol):
     def __init__(self, factory):
         self.factory = factory
         #self.queue = DeferredQueue()    # Queue to hold all data 
-        self.queue = Queue()
+        self.queue = queue.Queue()
 
     def connectionMade(self):
         '''Upon establishing data connection, create service connection'''
@@ -66,7 +75,7 @@ class DataConnection(Protocol):
 
     def returnData(self):
         myQueue = self.queue
-        self.queue = Queue() # new queue for next round of data
+        self.queue = queue.Queue() # new queue for next round of data
         return myQueue
 
     def sendSpeed(self, speed): 
@@ -92,6 +101,7 @@ class CommandConnectionFactory(ClientFactory):
     '''Generates command connection'''
     def __init__(self):
         self.command_connection = CommandConnection(self)
+        self.data_connection = ''
 
     def buildProtocol(self, addr):
         return self.command_connection
@@ -102,8 +112,9 @@ class CommandConnectionFactory(ClientFactory):
 class DataConnectionFactory(ClientFactory):
     '''Generates data connections'''
     def __init__(self, factory):
-        self.command_connection = factory.command_connection
+        #self.command_connection = factory.command_connection
         self.data_connection = DataConnection(self)
+        factory.data_connection = self.data_connection
 
     def buildProtocol(self, addr):
         return self.data_connection 

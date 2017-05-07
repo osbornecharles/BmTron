@@ -10,6 +10,9 @@ COMMAND_PORT = 40128
     # 1 is east
     # 2 is south
     # 3 is west
+media_files = "./mediafiles/"
+CELL_SIZE = 20 
+SERVER = "newt.campus.nd.edu"
 
 if __name__ == "__main__":
     # Instantiate CommandConnectionFactory 
@@ -20,5 +23,5 @@ if __name__ == "__main__":
     gs.titleScene(factory, "client")
 
     # Connect to host's command port and start the reactor for event driven system 
-    reactor.connectTCP("ash.campus.nd.edu", COMMAND_PORT, factory)
+    reactor.connectTCP(SERVER, COMMAND_PORT, factory)
     reactor.run()

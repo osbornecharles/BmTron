@@ -3,7 +3,9 @@ from twisted.internet import reactor
 from server import *
 from GameObjects import *
 
-COMMAND_PORT = 40128
+media_file_path = "./mediafiles/"
+COMMAND_PORT = 41128
+CELL_SIZE = 20
         
 if __name__ == "__main__":
     gs = GameSpace()
@@ -11,4 +13,3 @@ if __name__ == "__main__":
     gs.titleScene(factory, "host")
     reactor.listenTCP(COMMAND_PORT, factory) 
     reactor.run()
-
