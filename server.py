@@ -9,8 +9,8 @@ import sys
 import queue
 log.startLogging(sys.stdout)
 
-COMMAND_PORT = 41128
-DATA_PORT = 42128
+COMMAND_PORT = 41138
+DATA_PORT = 42138
 
 
 # ======================= CONNECTIONS =========================================

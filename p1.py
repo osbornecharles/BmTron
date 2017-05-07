@@ -3,7 +3,7 @@ from twisted.internet import reactor
 from server import *
 from GameObjects import *
 
-COMMAND_PORT = 41128
+COMMAND_PORT = 41138
         
 if __name__ == "__main__":
     gs = GameSpace()

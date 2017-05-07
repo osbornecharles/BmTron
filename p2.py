@@ -3,7 +3,7 @@ from twisted.internet import reactor
 from client import *
 from GameObjects import * 
 
-COMMAND_PORT = 41128
+COMMAND_PORT = 41138
 
 SERVER = "newt.campus.nd.edu"
 

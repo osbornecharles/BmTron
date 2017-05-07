@@ -51,8 +51,8 @@ class Player(pygame.sprite.Sprite):
         self.gs = gamespace
 
     def get_array_pos(self):
-        x = self.x / CELL_SIZE
-        y = self.y / CELL_SIZE
+        x = int(self.x / CELL_SIZE)
+        y = int(self.y / CELL_SIZE)
         return (x, y)
 
     def updatePlayer(self, boardVal):
@@ -62,30 +62,30 @@ class Player(pygame.sprite.Sprite):
             self.fat = 0
             self.slow = 0
             self.fast = 0
-            self.factory.data_connection.sendPowerupEnd()
+            self.gs.factory.data_connection.sendPowerupEnd()
         if boardVal == 1:
             self.dead = 1
-            self.factory.data_connection.sendCollision()
+            self.gs.factory.data_connection.sendCollision()
         elif boardVal == 2:
             self.dead = 1
-            self.factory.data_connection.sendCollision()
+            self.gs.factory.data_connection.sendCollision()
         elif boardVal == 11:
             self.dead = 1
-            self.factory.data_connection.sendCollision()
+            self.gs.factory.data_connection.sendCollision()
         elif boardVal == 22:
             self.dead = 1
-            self.factory.data_connection.sendCollision()
+            self.gs.factory.data_connection.sendCollision()
         elif boardVal == 3:
             self.fat = 1
             self.powerUpTurns = 5
-            self.factory.data_connection.sendSizeChange()
+            self.gs.factory.data_connection.sendSizeChange()
         elif boardVal == 4:
             self.slow = 1
-            self.factory.data_connection.sendSpeed(10)
+            self.gs.factory.data_connection.sendSpeed(10)
             self.powerUpTurns = 5
         elif boardVal == 5:
             self.fast = 1
-            self.factory.data_connection.sendSpeed(30)
+            self.gs.factory.data_connection.sendSpeed(30)
             self.powerUpTurns = 5
         if not self.dead:
             moveAmount = CELL_SIZE
@@ -95,26 +95,26 @@ class Player(pygame.sprite.Sprite):
                 moveAmount = 30
             if self.currentDirection == 0:
                 if self.y - moveAmount < 0:
-                    self.factory.data_connection.sendCollision()
+                    self.gs.factory.data_connection.sendCollision()
                     self.dead = 1
                     return
                 self.y -= moveAmount 
             elif self.currentDirection == 2:
                 if self.y + moveAmount > self.height - CELL_SIZE:
                     self.dead = 1
-                    self.factory.data_connection.sendCollision()
+                    self.gs.factory.data_connection.sendCollision()
                     return
                 self.y += moveAmount
             elif self.currentDirection == 3:
                 if self.x - moveAmount < 0:
                     self.dead = 1
-                    self.factory.data_connection.sendCollision()
+                    self.gs.factory.data_connection.sendCollision()
                     return
                 self.x -= moveAmount
             else:
                 if self.x + moveAmount > self.width - CELL_SIZE:
                     self.dead = 1
-                    self.factory.data_connection.sendCollision()
+                    self.gs.factory.data_connection.sendCollision()
                     return
                 self.x += moveAmount
 
@@ -122,7 +122,7 @@ class Player(pygame.sprite.Sprite):
         print("UP")
         if self.currentDirection == 2:
             self.dead = 1
-            self.factory.data_connection.sendCollision()
+            self.gs.factory.data_connection.sendCollision()
             return
         tup = self.get_array_pos()
         self.gs.board[tup[1]][tup[0]] = 11
@@ -134,7 +134,7 @@ class Player(pygame.sprite.Sprite):
         print("DOWN")
         if self.currentDirection == 0:
             self.dead = 1
-            self.factory.data_connection.sendCollision()
+            self.gs.factory.data_connection.sendCollision()
             return
         tup = self.get_array_pos()
         self.gs.board[tup[1]][tup[0]] = 11
@@ -146,7 +146,7 @@ class Player(pygame.sprite.Sprite):
         print("LEFT")
         if self.currentDirection == 1:
             self.dead = 1
-            self.factory.data_connection.sendCollision()
+            self.gs.factory.data_connection.sendCollision()
             return
         tup = self.get_array_pos()
         self.gs.board[tup[1]][tup[0]] = 11
@@ -158,7 +158,7 @@ class Player(pygame.sprite.Sprite):
         print("RIGHT")
         if self.currentDirection == 3:
             self.dead = 1
-            self.factory.data_connection.sendCollision()
+            self.gs.factory.data_connection.sendCollision()
             return
         tup = self.get_array_pos()
         self.gs.board[tup[1]][tup[0]] = 11
