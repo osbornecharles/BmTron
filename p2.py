@@ -3,15 +3,8 @@ from twisted.internet import reactor
 from client import *
 from GameObjects import * 
 
-COMMAND_PORT = 40128
+COMMAND_PORT = 41128
 
-# DIRECTION
-    # 0 is north
-    # 1 is east
-    # 2 is south
-    # 3 is west
-media_files = "./mediafiles/"
-CELL_SIZE = 20 
 SERVER = "newt.campus.nd.edu"
 
 if __name__ == "__main__":

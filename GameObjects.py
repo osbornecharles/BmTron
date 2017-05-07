@@ -1,5 +1,6 @@
 import pygame, sys
 from twisted.internet.task import LoopingCall
+CELL_SIZE = 20 
 from twisted.internet import reactor
 
 mediafile = "./mediafiles/"
@@ -123,7 +124,7 @@ class Player(pygame.sprite.Sprite):
             self.dead = 1
             self.factory.data_connection.sendCollision()
             return
-        tup = get_array_pos()
+        tup = self.get_array_pos()
         self.gs.board[tup[1]][tup[0]] = 11
         boardVal = self.gs.board[tup[1]-1][tup[0]]
         self.currentDirection = 0
@@ -135,7 +136,7 @@ class Player(pygame.sprite.Sprite):
             self.dead = 1
             self.factory.data_connection.sendCollision()
             return
-        tup = get_array_pos()
+        tup = self.get_array_pos()
         self.gs.board[tup[1]][tup[0]] = 11
         boardVal = self.gs.board[tup[1]-1][tup[0]]
         self.currentDirection = 2
@@ -147,7 +148,7 @@ class Player(pygame.sprite.Sprite):
             self.dead = 1
             self.factory.data_connection.sendCollision()
             return
-        tup = get_array_pos()
+        tup = self.get_array_pos()
         self.gs.board[tup[1]][tup[0]] = 11
         boardVal = self.gs.board[tup[1]-1][tup[0]]
         self.currentDirection = 3
@@ -159,7 +160,7 @@ class Player(pygame.sprite.Sprite):
             self.dead = 1
             self.factory.data_connection.sendCollision()
             return
-        tup = get_array_pos()
+        tup = self.get_array_pos()
         self.gs.board[tup[1]][tup[0]] = 11
         boardVal = self.gs.board[tup[1]][tup[0]+1]
         self.currentDirection = 4
@@ -350,8 +351,8 @@ class GameSpace:
         for obj in self.all_objects:
             obj.tick()
 
-        self.screen.blit(self.p1.image, self.p1.rect)
-        self.screen.blit(self.p2.image, self.p2.rect)
+        self.screen.blit(self.you.image, self.you.rect)
+        self.screen.blit(self.other.image, self.other.rect)
         pygame.display.flip()
 
 
