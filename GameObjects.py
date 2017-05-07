@@ -52,7 +52,7 @@ class Player(pygame.sprite.Sprite):
         return (x, y)
 
     def updatePlayer(self, boardVal):
-        self.powerUpTurns--
+        self.powerUpTurns -= 1
         if self.powerUpTurns <= 0:
             self.powerUpTurns = 0
             self.fat = 0
@@ -112,7 +112,7 @@ class Player(pygame.sprite.Sprite):
         updatePlayer(boardVal)
 
     def move_down(self): 
-        if self.y + CELL_SIZE > self.height - CELL_SIZE or self.currentDirection == 0:
+        if self.currentDirection == 0:
             self.dead = 1
         tup = get_array_pos()
         self.gs.board[tup[1]][tup[0]] = 11
@@ -120,8 +120,8 @@ class Player(pygame.sprite.Sprite):
         self.currentDirection = 2
         updatePlayer(boardVal)
 
-    def move_left(self) or self.currentDirecion == 1:
-        if self.x - CELL_SIZE < 0:
+    def move_left(self): 
+        if self.currentDirection == 1:
             self.dead = 1
         tup = get_array_pos()
         self.gs.board[tup[1]][tup[0]] = 11
@@ -130,7 +130,7 @@ class Player(pygame.sprite.Sprite):
         updatePlayer(boardVal)
 
     def move_right(self):
-        if self.x + CELL_SIZE > self.width - CELL_SIZE or self.currentDirection == 3:
+        if self.currentDirection == 3:
             self.dead = 1
         tup = get_array_pos()
         self.gs.board[tup[1]][tup[0]] = 11
