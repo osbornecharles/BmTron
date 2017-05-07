@@ -1,6 +1,8 @@
 import pygame, sys
 from twisted.internet.task import LoopingCall
 
+mediafile = "./mediafiles/"
+
 class Board():
     def __init__(self, gamespace):
         self.gs = gamespace
@@ -33,8 +35,8 @@ class Player(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.x = x
         self.y = y
-        #self.image = pygame.image.load(image)
-        #self.rect = self.image.get_rect()
+        self.image = pygame.image.load(image)
+        self.rect = self.image.get_rect()
         self.name = name
         self.dead = 0
         self.fat = 0
@@ -188,10 +190,12 @@ class OtherPlayer(pygame.sprite.Sprite):
 
 class GameSpace:
 
-    def titleScene(self, factory): 
+    def titleScene(self, factory, who): 
         '''Title scene with start button'''
         # Save factory
         self.factory = factory
+
+        self.who = who
 
         # Initialize the game space
         pygame.init()
@@ -257,8 +261,13 @@ class GameSpace:
     def gameScene(self):
         # Set up game objects
         self.board = Board(self)
-        self.p1 = Player1(self)
-        self.p2 = Player2(self)
+
+        if (who == "host"):
+            self.p1 = Player1(self.width/4, self.height/2, mediafile + "gabe.png", "gabe", self)
+            self.p2 = Player2(self.width*3/4, self.height/2, self, mediafile + "doge.png", "doge", self)
+		else:
+            self.p1 = Player2(self.width/4, self.height/2, mediafile + "gabe.png", "gabe", self)
+            self.p2 = Player1(self.width*3/4, self.height/2, self, mediafile + "doge.png", "doge", self)
 
         # Draw players onto screen
         self.screen.blit(self.p1.image, self.p1.rect)
@@ -283,3 +292,5 @@ class GameSpace:
             obj.tick()
 
         pygame.display.flip()
+
+
