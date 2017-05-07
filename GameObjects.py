@@ -125,8 +125,8 @@ class Player(pygame.sprite.Sprite):
             self.gs.factory.data_connection.sendCollision()
             return
         tup = self.get_array_pos()
-        self.gs.board[tup[1]][tup[0]] = 11
-        boardVal = self.gs.board[tup[1]-1][tup[0]]
+        self.gs.board.board[tup[1]][tup[0]] = 11
+        boardVal = self.gs.board.board[tup[1]-1][tup[0]]
         self.currentDirection = 0
         updatePlayer(boardVal)
 
@@ -137,8 +137,8 @@ class Player(pygame.sprite.Sprite):
             self.gs.factory.data_connection.sendCollision()
             return
         tup = self.get_array_pos()
-        self.gs.board[tup[1]][tup[0]] = 11
-        boardVal = self.gs.board[tup[1]-1][tup[0]]
+        self.gs.board.board[tup[1]][tup[0]] = 11
+        boardVal = self.gs.board.board[tup[1]-1][tup[0]]
         self.currentDirection = 2
         updatePlayer(boardVal)
 
@@ -149,8 +149,8 @@ class Player(pygame.sprite.Sprite):
             self.gs.factory.data_connection.sendCollision()
             return
         tup = self.get_array_pos()
-        self.gs.board[tup[1]][tup[0]] = 11
-        boardVal = self.gs.board[tup[1]-1][tup[0]]
+        self.gs.board.board[tup[1]][tup[0]] = 11
+        boardVal = self.gs.board.board[tup[1]-1][tup[0]]
         self.currentDirection = 3
         updatePlayer(boardVal)
 
@@ -161,8 +161,8 @@ class Player(pygame.sprite.Sprite):
             self.gs.factory.data_connection.sendCollision()
             return
         tup = self.get_array_pos()
-        self.gs.board[tup[1]][tup[0]] = 11
-        boardVal = self.gs.board[tup[1]][tup[0]+1]
+        self.gs.board.board[tup[1]][tup[0]] = 11
+        boardVal = self.gs.board.board[tup[1]][tup[0]+1]
         self.currentDirection = 4
         updatePlayer(boardVal)
 
