@@ -265,7 +265,7 @@ class GameSpace:
         if (who == "host"):
             self.p1 = Player1(self.width/4, self.height/2, mediafile + "gabe.png", "gabe", self)
             self.p2 = Player2(self.width*3/4, self.height/2, self, mediafile + "doge.png", "doge", self)
-		else:
+        else:
             self.p1 = Player2(self.width/4, self.height/2, mediafile + "gabe.png", "gabe", self)
             self.p2 = Player1(self.width*3/4, self.height/2, self, mediafile + "doge.png", "doge", self)
 
