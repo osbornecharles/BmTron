@@ -5,14 +5,8 @@ from client import *
 from GameObjects import * 
 
 media_files = "./mediafiles/"
-COMMAND_PORT = 40128
+COMMAND_PORT = 41128
 CELL_SIZE = 20 
-
-# DIRECTION
-    # 0 is north
-    # 1 is east
-    # 2 is south
-    # 3 is west
 
 if __name__ == "__main__":
     # Instantiate CommandConnectionFactory 

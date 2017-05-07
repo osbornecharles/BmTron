@@ -5,6 +5,12 @@ from twisted.internet import reactor
 mediafile = "./mediafiles/"
 CELL_SIZE = 20
 
+# DIRECTION
+    # 0 is north
+    # 1 is east
+    # 2 is south
+    # 3 is west
+
 class Board():
     def __init__(self, gamespace):
         self.gs = gamespace
@@ -29,7 +35,7 @@ class Board():
         for y in range(len(self.board)):
             for x in range(len(self.board[0])):
                 print("| {} ".format(self.board[y][x]), end = '')
-            print ("\n----------------------------")
+            print ("\n---------------------------------------------------------------------------------------------------------------------------------")
 
 
 class Player(pygame.sprite.Sprite):
@@ -140,6 +146,9 @@ class Player(pygame.sprite.Sprite):
         self.currentDirection = 4
         updatePlayer(boardVal)
 
+    def tick(self):
+        pass
+
 class OtherPlayer(pygame.sprite.Sprite):
     def __init__(self, x, y, image, name, gamespace):
         pygame.sprite.Sprite.__init__(self)
@@ -160,7 +169,7 @@ class OtherPlayer(pygame.sprite.Sprite):
     def tick(self):
         '''Send location to other player'''
         # Retrieve data from host player about Player 1
-        dataQueue = self.gs.data_connection.returnData()
+        dataQueue = self.gs.factory.data_connection.returnData()
         while (not dataQueue.empty()):
             data = dataQueue.get().split()
 
@@ -201,6 +210,10 @@ class GameSpace:
 
         # Initialize the game space
         pygame.init()
+        if (self.who == "host"):
+            pygame.display.set_caption("Host player")
+        else:
+            pygame.display.set_caption("Client player")
         self.size = self.width, self.height = 640, 420
         self.black = 0,0,0
         self.screen = pygame.display.set_mode(self.size)
@@ -261,24 +274,25 @@ class GameSpace:
             self.gameScene()
 
     def gameScene(self):
+        '''Actual game!'''
         # Set up game objects
         self.board = Board(self)
 
         if (self.who == "host"):
-            self.p1 = Player(self.width/4, self.height/2, mediafile + "gabe.png", "gabe", self)
-            self.p2 = OtherPlayer(self.width*3/4, self.height/2, mediafile + "doge.png", "doge", self)
+            self.you = Player(self.width/4, self.height/2, mediafile + "gabe.png", "gabe", self)
+            self.other = OtherPlayer(self.width*3/4, self.height/2, mediafile + "doge.png", "doge", self)
         else:
-            self.p1 = OtherPlayer(self.width/4, self.height/2, mediafile + "gabe.png", "gabe", self)
-            self.p2 = Player(self.width*3/4, self.height/2,  mediafile + "doge.png", "doge", self)
-
-        # Draw players onto screen
-        self.screen.blit(self.p1.image, self.p1.rect)
-        self.screen.blit(self.p2.image, self.p2.rect)
-
-        self.board.printBoard()
+            self.you = Player(self.width*3/4, self.height/2,  mediafile + "doge.png", "doge", self)
+            self.other = OtherPlayer(self.width/4, self.height/2, mediafile + "gabe.png", "gabe", self)
 
         # List to hold all other game objects
-        #self.all_objects = [self.p1, self.p2]
+        self.all_objects = [self.you, self.other]
+
+        # Draw players onto screen
+        self.screen.blit(self.you.image, self.you.rect)
+        self.screen.blit(self.other.image, self.other.rect)
+
+        self.board.printBoard()
 
         # Start game loop
         self.loop = LoopingCall(self.gameloop)
