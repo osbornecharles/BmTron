@@ -1,7 +1,9 @@
 import pygame, sys
 from twisted.internet.task import LoopingCall
+from twisted.internet import reactor
 
 mediafile = "./mediafiles/"
+CELL_SIZE = 20
 
 class Board():
     def __init__(self, gamespace):
@@ -16,17 +18,17 @@ class Board():
     def putOnBoard(self, thing, x, y):
         print("{} at x = {}, y = {}".format(thing.name, x,y))
         if (thing.name == "gabe"):
-            self.board[y][x] = 1
+            self.board[int(y)][int(x)] = 1
         elif (thing.name == "doge"):
-            self.board[y][x] = 2
+            self.board[int(y)][int(x)] = 2
 
     def deleteFromBoard(self, x, y):
         self.board[y][x] = 0
 
     def printBoard(self):
-        for y in range(len(board)):
-            for x in range(len(board[0])):
-                print("| {} ".format(board[y][x]), end = '')
+        for y in range(len(self.board)):
+            for x in range(len(self.board[0])):
+                print("| {} ".format(self.board[y][x]), end = '')
             print ("\n----------------------------")
 
 
@@ -262,12 +264,12 @@ class GameSpace:
         # Set up game objects
         self.board = Board(self)
 
-        if (who == "host"):
-            self.p1 = Player1(self.width/4, self.height/2, mediafile + "gabe.png", "gabe", self)
-            self.p2 = Player2(self.width*3/4, self.height/2, self, mediafile + "doge.png", "doge", self)
-		else:
-            self.p1 = Player2(self.width/4, self.height/2, mediafile + "gabe.png", "gabe", self)
-            self.p2 = Player1(self.width*3/4, self.height/2, self, mediafile + "doge.png", "doge", self)
+        if (self.who == "host"):
+            self.p1 = Player(self.width/4, self.height/2, mediafile + "gabe.png", "gabe", self)
+            self.p2 = OtherPlayer(self.width*3/4, self.height/2, mediafile + "doge.png", "doge", self)
+        else:
+            self.p1 = OtherPlayer(self.width/4, self.height/2, mediafile + "gabe.png", "gabe", self)
+            self.p2 = Player(self.width*3/4, self.height/2,  mediafile + "doge.png", "doge", self)
 
         # Draw players onto screen
         self.screen.blit(self.p1.image, self.p1.rect)
@@ -285,8 +287,17 @@ class GameSpace:
 
     def gameloop(self):
         print("In game loop")
-        #for event in pygame.event.get():
-            #if event.type == pygame.KEYDOWN:
+
+        if (not self.factory.command_connection.start()):
+            for event in pygame.event.get():
+                # Close pygame
+                if event.type == pygame.QUIT:
+                    reactor.stop()
+                # Key detection
+                elif event.type == pygame.KEYDOWN:
+                    # Escape key to end pygame
+                    if (event.key == pygame.K_ESCAPE):
+                        reactor.stop()
         
         for obj in self.all_objects:
             obj.tick()

@@ -12,7 +12,7 @@ CELL_SIZE = 20
 if __name__ == "__main__":
     gs = GameSpace()
     factory = CommandConnectionFactory()
-    gs.main(factory, "host")
+    gs.titleScene(factory, "host")
     reactor.listenTCP(COMMAND_PORT, factory) 
     reactor.run()
 
