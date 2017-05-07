@@ -1,12 +1,9 @@
 import pygame, sys
-from twisted.internet.task import LoopingCall
 from twisted.internet import reactor
 from client import *
 from GameObjects import * 
 
-media_files = "./mediafiles/"
 COMMAND_PORT = 40128
-CELL_SIZE = 20 
 
 # DIRECTION
     # 0 is north

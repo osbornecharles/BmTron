@@ -1,7 +1,9 @@
 import pygame, sys
 from twisted.internet.task import LoopingCall
+from twisted.internet import reactor
 
 mediafile = "./mediafiles/"
+CELL_SIZE = 20
 
 class Board():
     def __init__(self, gamespace):
@@ -24,9 +26,9 @@ class Board():
         self.board[y][x] = 0
 
     def printBoard(self):
-        for y in range(len(board)):
-            for x in range(len(board[0])):
-                print("| {} ".format(board[y][x]), end = '')
+        for y in range(len(self.board)):
+            for x in range(len(self.board[0])):
+                print("| {} ".format(self.board[y][x]), end = '')
             print ("\n----------------------------")
 
 
@@ -37,6 +39,7 @@ class Player(pygame.sprite.Sprite):
         self.y = y
         self.image = pygame.image.load(image)
         self.rect = self.image.get_rect()
+        self.rect.topleft = (x, y)
         self.name = name
         self.dead = 0
         self.fat = 0
@@ -58,22 +61,30 @@ class Player(pygame.sprite.Sprite):
             self.fat = 0
             self.slow = 0
             self.fast = 0
+            self.factory.data_connection.sendPowerupEnd()
         if boardVal == 1:
             self.dead = 1
+            self.factory.data_connection.sendCollision()
         elif boardVal == 2:
             self.dead = 1
+            self.factory.data_connection.sendCollision()
         elif boardVal == 11:
             self.dead = 1
+            self.factory.data_connection.sendCollision()
         elif boardVal == 22:
             self.dead = 1
+            self.factory.data_connection.sendCollision()
         elif boardVal == 3:
             self.fat = 1
             self.powerUpTurns = 5
+            self.factory.data_connection.sendSizeChange()
         elif boardVal == 4:
             self.slow = 1
+            self.factory.data_connection.sendSpeed(10)
             self.powerUpTurns = 5
         elif boardVal == 5:
             self.fast = 1
+            self.factory.data_connection.sendSpeed(30)
             self.powerUpTurns = 5
         if not self.dead:
             moveAmount = CELL_SIZE
@@ -83,28 +94,34 @@ class Player(pygame.sprite.Sprite):
                 moveAmount = 30
             if self.currentDirection == 0:
                 if self.y - moveAmount < 0:
+                    self.factory.data_connection.sendCollision()
                     self.dead = 1
                     return
                 self.y -= moveAmount 
             elif self.currentDirection == 2:
                 if self.y + moveAmount > self.height - CELL_SIZE:
                     self.dead = 1
+                    self.factory.data_connection.sendCollision()
                     return
                 self.y += moveAmount
             elif self.currentDirection == 3:
                 if self.x - moveAmount < 0:
                     self.dead = 1
+                    self.factory.data_connection.sendCollision()
                     return
                 self.x -= moveAmount
             else:
                 if self.x + moveAmount > self.width - CELL_SIZE:
                     self.dead = 1
+                    self.factory.data_connection.sendCollision()
                     return
                 self.x += moveAmount
 
     def move_up(self):
         if self.currentDirection == 2:
             self.dead = 1
+            self.factory.data_connection.sendCollision()
+            return
         tup = get_array_pos()
         self.gs.board[tup[1]][tup[0]] = 11
         boardVal = self.gs.board[tup[1]-1][tup[0]]
@@ -114,6 +131,8 @@ class Player(pygame.sprite.Sprite):
     def move_down(self): 
         if self.currentDirection == 0:
             self.dead = 1
+            self.factory.data_connection.sendCollision()
+            return
         tup = get_array_pos()
         self.gs.board[tup[1]][tup[0]] = 11
         boardVal = self.gs.board[tup[1]-1][tup[0]]
@@ -123,6 +142,8 @@ class Player(pygame.sprite.Sprite):
     def move_left(self): 
         if self.currentDirection == 1:
             self.dead = 1
+            self.factory.data_connection.sendCollision()
+            return
         tup = get_array_pos()
         self.gs.board[tup[1]][tup[0]] = 11
         boardVal = self.gs.board[tup[1]-1][tup[0]]
@@ -132,6 +153,8 @@ class Player(pygame.sprite.Sprite):
     def move_right(self):
         if self.currentDirection == 3:
             self.dead = 1
+            self.factory.data_connection.sendCollision()
+            return
         tup = get_array_pos()
         self.gs.board[tup[1]][tup[0]] = 11
         boardVal = self.gs.board[tup[1]][tup[0]+1]
@@ -145,6 +168,7 @@ class OtherPlayer(pygame.sprite.Sprite):
         self.y = y
         self.image = pygame.image.load(image)
         self.rect = self.image.get_rect()
+        self.rect.topleft = (x, y)
         self.name = name
         self.dead = 0
         self.fat = 0
@@ -153,7 +177,7 @@ class OtherPlayer(pygame.sprite.Sprite):
         self.powerUpTurns = 0
         self.currentDirection = 3
         self.gs = gamespace
-        self.gs.board.putOnBoard(self, self.x/CELL_SIZE, self.y/CELL_SIZE)
+        self.gs.board.putOnBoard(self, int(self.x/CELL_SIZE), int(self.y/CELL_SIZE))
 
     def tick(self):
         '''Send location to other player'''
@@ -230,6 +254,7 @@ class GameSpace:
 
     def titleloop(self):
         # Stay at title scene if both players have not selected start
+        print('looping')
         if (not self.factory.command_connection.start()):
             for event in pygame.event.get():
                 # Close pygame
@@ -242,6 +267,7 @@ class GameSpace:
                         reactor.stop()
                 # Mouse detection
                 elif event.type == pygame.MOUSEBUTTONDOWN:
+                    print('clicked')
                     mouse_pos = pygame.mouse.get_pos()
                     # User clicked start
                     if self.startButton.collidepoint(mouse_pos):
@@ -262,12 +288,12 @@ class GameSpace:
         # Set up game objects
         self.board = Board(self)
 
-        if (who == "host"):
-            self.p1 = Player1(self.width/4, self.height/2, mediafile + "gabe.png", "gabe", self)
-            self.p2 = Player2(self.width*3/4, self.height/2, self, mediafile + "doge.png", "doge", self)
+        if (self.who == "host"):
+            self.p1 = Player(self.width/4, self.height/2, mediafile + "gabe.png", "gabe", self)
+            self.p2 = OtherPlayer(self.width*3/4, self.height/2, mediafile + "doge.png", "doge", self)
         else:
-            self.p1 = Player2(self.width/4, self.height/2, mediafile + "gabe.png", "gabe", self)
-            self.p2 = Player1(self.width*3/4, self.height/2, self, mediafile + "doge.png", "doge", self)
+            self.p1 = OtherPlayer(self.width/4, self.height/2, mediafile + "gabe.png", "gabe", self)
+            self.p2 = Player(self.width*3/4, self.height/2, mediafile + "doge.png", "doge", self)
 
         # Draw players onto screen
         self.screen.blit(self.p1.image, self.p1.rect)
@@ -285,12 +311,28 @@ class GameSpace:
 
     def gameloop(self):
         print("In game loop")
-        #for event in pygame.event.get():
-            #if event.type == pygame.KEYDOWN:
-        
-        for obj in self.all_objects:
-            obj.tick()
+        for event in pygame.event.get():
+            # Close pygame
+            if event.type == pygame.QUIT:
+                reactor.stop()
+            # Key detection
+            elif event.type == pygame.KEYDOWN:
+                # Escape key to end pygame
+                if (event.key == pygame.K_ESCAPE):
+                    reactor.stop()
+            # Mouse detection
+            elif event.type == pygame.K_UP:
+                self.p1.move_up()
+            elif event.type == pygame.K_DOWN:
+                print('gotit')
+                self.p1.move_down()
+            elif event.type == pygame.K_RIGHT:
+                self.p1.move_right()
+            elif event.type == pygame.K_LEFT:
+                self.p1.move_left()
 
+        self.screen.blit(self.p1.image, self.p1.rect)
+        self.screen.blit(self.p2.image, self.p2.rect)
         pygame.display.flip()
 
 

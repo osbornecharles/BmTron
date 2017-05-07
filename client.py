@@ -5,6 +5,7 @@ from twisted.internet.protocol import Protocol
 from twisted.internet import reactor
 from twisted.internet.defer import DeferredQueue
 from twisted.python import log
+from queue import *
 import sys
 log.startLogging(sys.stdout)
 
@@ -77,8 +78,11 @@ class DataConnection(Protocol):
     def sendCollision(self):
         self.transport.write("dead".encode())
 
-    def sendSizeChange(self, size):
-        self.transport.write((" ".join("size", size)).encode())
+    def sendSizeChange(self):
+        self.transport.write("size".encode())
+
+    def sendPowerupEnd(self):
+        self.transport.write("powerupEnd".encode())
 
     #def sendRetrievedItem(self, item): 
     #    self.transport.write(" ".join("item",  item).encode())

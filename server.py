@@ -4,7 +4,7 @@ from twisted.internet.protocol import Factory, ServerFactory
 from twisted.internet.protocol import Protocol
 from twisted.internet import reactor
 from twisted.python import log
-from twisted.internet.defer import DeferredQueue
+from queue import *
 import sys
 log.startLogging(sys.stdout)
 
@@ -29,6 +29,7 @@ class CommandConnection(Protocol):
         self.transport.write("opened_dataport".encode())
 
     def sendStart(self):
+        print('sent start')
         self.transport.write("Start pressed".encode())
         self.sentStart = 1
 
@@ -43,7 +44,8 @@ class CommandConnection(Protocol):
 class DataConnection(Protocol):
     '''Handles data connection between home.py and work.py'''
     def __init__(self, factory):
-        self.datafactory = factory
+        self.factory = factory
+        self.queue = Queue()
 
     def connectionMade(self):
         '''Upon establishing data connection, start forwarding what is in client connection's queue'''
@@ -51,7 +53,29 @@ class DataConnection(Protocol):
 
     def dataReceived(self, data):
         '''Use client conection to forward data from work.py to client'''
-        print("Data connection: Received data from client player")
+        print("Data connection: Received data from client player", data.decode())
+        self.queue.put(data.decode())
+
+    def returnData(self):
+        myQueue = self.queue
+        self.queue = Queue() # new queue for next round of data
+        return myQueue
+
+    def sendSpeed(self, speed):
+        self.transport.write(" ".join("speed", str(speed)).encode())
+
+    def sendDirection(self, direction):
+        self.transport.write(" ".join("direction",str(direction)).encode())
+
+    def sendCollision(self):
+        self.transport.write("dead".encode())
+
+    def sendSizeChange(self):
+        self.transport.write("size".encode())
+
+    def sendPowerupEnd(self):
+        self.transport.write("powerupEnd".encode())
+
 
 
 # ======================= CONNECTION FACTORY ==================================
