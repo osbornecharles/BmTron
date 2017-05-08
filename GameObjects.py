@@ -138,7 +138,7 @@ class Player(pygame.sprite.Sprite):
         elif boardVal == 2:
             self.dead = 1
             self.gs.factory.data_connection.sendCollision()
-        elif boardVal == 11:
+        elif boardVal == 11 or boardVal == 22:
             self.dead = 1
             self.gs.factory.data_connection.sendCollision()
         elif boardVal == self.trail:
@@ -249,7 +249,7 @@ class OtherPlayer(pygame.sprite.Sprite):
             # Host player changed direction
             elif (data[0] == "direction"):
                 print('got direction', data[1])
-                self.currentDirection = int(data[1])
+                self.currentDirection = int(data[1][0])
                 self.changedDir = 1
 
             # Host player changed speed
@@ -432,6 +432,12 @@ class GameSpace:
 
     def gameloop(self):
         numMoves = 0
+        if self.you.dead:
+            print("You lost")
+            reactor.stop()
+        elif self.other.dead:
+            print("You won")
+            reactor.stop()
         for event in pygame.event.get():
             # Close pygame
             if event.type == pygame.QUIT:
