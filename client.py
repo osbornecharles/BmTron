@@ -90,8 +90,6 @@ class DataConnection(Protocol):
     def sendSizeChange(self):
         self.transport.write("size".encode())
 
-    def sendPowerupEnd(self):
-        self.transport.write("powerupEnd".encode())
 
     #def sendRetrievedItem(self, item): 
     #    self.transport.write(" ".join("item",  item).encode())
