@@ -10,8 +10,8 @@ import sys
 import queue 
 log.startLogging(sys.stdout)
 
-COMMAND_PORT = 41138
-DATA_PORT = 42138
+COMMAND_PORT = 41148
+DATA_PORT = 42148
 SERVER = "newt.campus.nd.edu"
 
 # ======================= CONNECTIONS =========================================

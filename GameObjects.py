@@ -1,10 +1,9 @@
 import pygame, sys
 from twisted.internet.task import LoopingCall
-CELL_SIZE = 20 
 from twisted.internet import reactor
 
 mediafile = "./mediafiles/"
-CELL_SIZE = 20
+CELL_SIZE = 10
 
 class Board():
     def __init__(self, gamespace):
@@ -55,7 +54,84 @@ class Player(pygame.sprite.Sprite):
         y = int(self.y / CELL_SIZE)
         return (x, y)
 
-    def updatePlayer(self, boardVal):
+    def updatePlayer(self):
+        tup = self.get_array_pos()
+        boardVal = 0
+        if not self.dead:
+            moveAmount = 20
+            if self.slow:
+                moveAmount = 10
+            elif self.fast:
+                moveAmount = 30
+            if self.currentDirection == 0:
+                if self.y - moveAmount < 0:
+                    self.dead = 1
+                    self.gs.factory.data_connection.sendCollision()
+                    return
+                if moveAmount == 20:
+                    self.gs.gameboard.board[tup[1]+1][tup[0]] = 11
+                    self.gs.gameboard.board[tup[1]][tup[0]] = 11
+                elif moveAmount == 30:
+                    self.gs.gameboard.board[tup[1]+1][tup[0]] = 11
+                    self.gs.gameboard.board[tup[1]+2][tup[0]] = 11
+                    self.gs.gameboard.board[tup[1]][tup[0]] = 11
+                else:
+                    self.gs.gameboard.board[tup[1]][tup[0]] = 11
+                boardVal = self.gs.gameboard.board[tup[1]-1][tup[0]]
+                self.gs.gameboard.board[tup[1]-1][tup[0]] = 1
+                self.y -= moveAmount 
+            elif self.currentDirection == 2:
+                if self.y + moveAmount > self.gs.height - CELL_SIZE:
+                    self.dead = 1
+                    self.gs.factory.data_connection.sendCollision()
+                    return
+                if moveAmount == 20:
+                    self.gs.gameboard.board[tup[1]-1][tup[0]] = 11
+                    self.gs.gameboard.board[tup[1]][tup[0]] = 11
+                elif moveAmount == 30:
+                    self.gs.gameboard.board[tup[1]-1][tup[0]] = 11
+                    self.gs.gameboard.board[tup[1]-2][tup[0]] = 11
+                    self.gs.gameboard.board[tup[1]][tup[0]] = 11
+                else:
+                    self.gs.gameboard.board[tup[1]][tup[0]] = 11
+                boardVal = self.gs.gameboard.board[tup[1]+1][tup[0]]
+                self.gs.gameboard.board[tup[1]+1][tup[0]] = 1
+                self.y += moveAmount
+            elif self.currentDirection == 3:
+                if self.x - moveAmount < 0:
+                    self.dead = 1
+                    self.gs.factory.data_connection.sendCollision()
+                    return
+                if moveAmount == 20:
+                    self.gs.gameboard.board[tup[1]][tup[0]+1] = 11
+                    self.gs.gameboard.board[tup[1]][tup[0]] = 11
+                elif moveAmount == 30:
+                    self.gs.gameboard.board[tup[1]][tup[0]+1] = 11
+                    self.gs.gameboard.board[tup[1]][tup[0]+2] = 11
+                    self.gs.gameboard.board[tup[1]][tup[0]] = 11
+                else:
+                    self.gs.gameboard.board[tup[1]][tup[0]] = 11
+                boardVal = self.gs.gameboard.board[tup[1]][tup[0]-1]
+                self.gs.gameboard.board[tup[1]][tup[0]-1] = 1
+                self.x -= moveAmount
+            else:
+                if self.x + moveAmount > self.gs.width - CELL_SIZE:
+                    self.dead = 1
+                    self.gs.factory.data_connection.sendCollision()
+                    return
+                if moveAmount == 20:
+                    self.gs.gameboard.board[tup[1]][tup[0]-1] = 11
+                    self.gs.gameboard.board[tup[1]][tup[0]] = 11
+                elif moveAmount == 30:
+                    self.gs.gameboard.board[tup[1]][tup[0]-1] = 11
+                    self.gs.gameboard.board[tup[1]][tup[0]-2] = 11
+                    self.gs.gameboard.board[tup[1]][tup[0]] = 11
+                else:
+                    self.gs.gameboard.board[tup[1]][tup[0]] = 11
+                boardVal = self.gs.gameboard.board[tup[1]][tup[0]+1]
+                self.gs.gameboard.board[tup[1]][tup[0]+1] = 1
+                self.x += moveAmount
+            self.rect.topleft = (self.x, self.y)
         self.powerUpTurns -= 1
         if self.powerUpTurns <= 0:
             self.powerUpTurns = 0
@@ -87,36 +163,6 @@ class Player(pygame.sprite.Sprite):
             self.fast = 1
             self.gs.factory.data_connection.sendSpeed(30)
             self.powerUpTurns = 5
-        if not self.dead:
-            moveAmount = CELL_SIZE
-            if self.slow:
-                moveAmount = 10
-            elif self.fast:
-                moveAmount = 30
-            if self.currentDirection == 0:
-                if self.y - moveAmount < 0:
-                    self.gs.factory.data_connection.sendCollision()
-                    self.dead = 1
-                    return
-                self.y -= moveAmount 
-            elif self.currentDirection == 2:
-                if self.y + moveAmount > self.gs.height - CELL_SIZE:
-                    self.dead = 1
-                    self.gs.factory.data_connection.sendCollision()
-                    return
-                self.y += moveAmount
-            elif self.currentDirection == 3:
-                if self.x - moveAmount < 0:
-                    self.dead = 1
-                    self.gs.factory.data_connection.sendCollision()
-                    return
-                self.x -= moveAmount
-            else:
-                if self.x + moveAmount > self.gs.width - CELL_SIZE:
-                    self.dead = 1
-                    self.gs.factory.data_connection.sendCollision()
-                    return
-                self.x += moveAmount
 
     def move_up(self):
         print("UP")
@@ -124,11 +170,8 @@ class Player(pygame.sprite.Sprite):
             self.dead = 1
             self.gs.factory.data_connection.sendCollision()
             return
-        tup = self.get_array_pos()
-        self.gs.gameboard.board[tup[1]][tup[0]] = 11
-        boardVal = self.gs.gameboard.board[tup[1]-1][tup[0]]
         self.currentDirection = 0
-        self.updatePlayer(boardVal)
+        self.updatePlayer()
 
     def move_down(self): 
         print("DOWN")
@@ -137,10 +180,8 @@ class Player(pygame.sprite.Sprite):
             self.gs.factory.data_connection.sendCollision()
             return
         tup = self.get_array_pos()
-        self.gs.gameboard.board[tup[1]][tup[0]] = 11
-        boardVal = self.gs.gameboard.board[tup[1]-1][tup[0]]
         self.currentDirection = 2
-        self.updatePlayer(boardVal)
+        self.updatePlayer()
 
     def move_left(self): 
         print("LEFT")
@@ -148,11 +189,8 @@ class Player(pygame.sprite.Sprite):
             self.dead = 1
             self.gs.factory.data_connection.sendCollision()
             return
-        tup = self.get_array_pos()
-        self.gs.gameboard.board[tup[1]][tup[0]] = 11
-        boardVal = self.gs.gameboard.board[tup[1]-1][tup[0]]
         self.currentDirection = 3
-        self.updatePlayer(boardVal)
+        self.updatePlayer()
 
     def move_right(self):
         print("RIGHT")
@@ -160,11 +198,8 @@ class Player(pygame.sprite.Sprite):
             self.dead = 1
             self.gs.factory.data_connection.sendCollision()
             return
-        tup = self.get_array_pos()
-        self.gs.gameboard.board[tup[1]][tup[0]] = 11
-        boardVal = self.gs.gameboard.board[tup[1]][tup[0]+1]
         self.currentDirection = 4
-        self.updatePlayer(boardVal)
+        self.updatePlayer()
 
     def tick(self):
         pass
@@ -255,6 +290,13 @@ class GameSpace:
         self.titleRect.topleft = (self.width/2 - self.titleRect.width/2, 10)
         pygame.draw.rect(self.screen, (30, 120, 50), self.startButton, 1)
 
+        self.dogetrail = pygame.image.load(mediafile + "dogetrail.png")
+        self.gabetrail = pygame.image.load(mediafile + "gabetrail.png")
+        self.taco = pygame.image.load(mediafile + "Taco_Emoji.png")
+        self.pizza = pygame.image.load(mediafile + "Pizza_Emoji.png")
+        self.poop = pygame.image.load(mediafile + "Poop_Emoji.png")
+        self.energy = pygame.image.load(mediafile + "5hourenergy.png")
+
         # Draw title and startText to screen
         self.screen.blit(self.startText, self.textRect)
         self.screen.blit(self.title, self.titleRect)
@@ -298,6 +340,9 @@ class GameSpace:
             self.loop.stop()
             self.gameScene()
 
+    def get_real_pos(self, y, x):
+        return (x*CELL_SIZE, y*CELL_SIZE)
+
     def gameScene(self):
         '''Actual game!'''
         # Set up game objects
@@ -327,7 +372,7 @@ class GameSpace:
         print("In game scene: started game loop")
 
     def gameloop(self):
-        print("In game loop")
+        print(self.you.rect)
         for event in pygame.event.get():
             # Close pygame
             if event.type == pygame.QUIT:
@@ -350,6 +395,43 @@ class GameSpace:
     
         for obj in self.all_objects:
             obj.tick()
+
+        for y in range(0, len(self.gameboard.board)):
+            for x in range(0, len(self.gameboard.board[0])):
+                    if self.gameboard.board[y][x] == 11:
+                        tup = self.get_real_pos(y, x)
+                        if self.who == "host":
+                            img = self.gabetrail
+                        else:
+                            img = self.dogetrail
+                        rect = img.get_rect()
+                        rect.topleft = tup 
+                        self.screen.blit(img, rect)
+                    elif self.gameboard.board[y][x] == 22:
+                        tup = self.get_real_pos(y, x)
+                        if self.who == "client":
+                            img = self.gabetrail
+                        else:
+                            img = self.dogetrail
+                        rect = img.get_rect()
+                        rect.topleft = tup 
+                        self.screen.blit(img, rect)
+                    elif self.gameboard.board[y][x] == 3:
+                        tup = self.get_real_pos(y, x)
+                        rect = self.taco.get_rect()
+                        rect.topleft = tup
+                        self.screen.blit(self.taco, rect)
+                    elif self.gameboard.board[y][x] == 4:
+                        tup = get_real_pos(y, x)
+                        rect = self.poop.get_rect()
+                        rect.topleft = tup 
+                        self.screen.blit(self.poop, rect)
+                    elif self.gameboard.board[y][x] == 5:
+                        tup = get_real_pos(y, x)
+                        rect = self.energy.get_rect()
+                        rect.topleft = tup 
+                        self.screen.blit(self.energy, rect)
+                        
 
         self.screen.blit(self.you.image, self.you.rect)
         self.screen.blit(self.other.image, self.other.rect)
