@@ -78,11 +78,13 @@ class DataConnection(Protocol):
         self.queue = queue.Queue() # new queue for next round of data
         return myQueue
 
-    def sendSpeed(self, speed): 
-        self.transport.write(" ".join("speed", str(speed)).encode())
+    def sendSpeed(self, speed):
+        beforestr = "speed " + str(speed)
+        self.transport.write(beforestr.encode())
 
     def sendDirection(self, direction):
-        self.transport.write(" ".join("direction",str(direction)).encode())
+        beforestr = "direction " + str(direction)
+        self.transport.write(beforestr.encode())
 
     def sendCollision(self):
         self.transport.write("dead".encode())

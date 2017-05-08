@@ -479,9 +479,9 @@ class GameSpace:
                     elif self.gameboard.board[y][x] == 22:
                         tup = self.get_real_pos(y, x)
                         if self.who == "host":
-                            img = self.dogetrail
-                        else:
                             img = self.gabetrail
+                        else:
+                            img = self.dogetrail
                         rect = img.get_rect()
                         rect.topleft = tup 
                         self.screen.blit(img, rect)
