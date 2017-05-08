@@ -127,7 +127,6 @@ class Player(pygame.sprite.Sprite):
             self.fat = 0
             self.slow = 0
             self.fast = 0
-            self.gs.factory.data_connection.sendPowerupEnd()
         if boardVal == 1:
             self.dead = 1
             self.gs.factory.data_connection.sendCollision()
@@ -203,13 +202,16 @@ class OtherPlayer(pygame.sprite.Sprite):
         self.rect.topleft = (x, y)
         self.name = name
         self.dead = 0
-        self.fat = 0
-        self.slow = 0
-        self.fast = 0
-        self.powerUpTurns = 0
         self.currentDirection = 3
+        self.moveAmount = 20
+        self.changedDir = 0
         self.gs = gamespace
         self.gs.gameboard.putOnBoard(self, int(self.x/CELL_SIZE), int(self.y/CELL_SIZE))
+
+    def get_array_pos(self):
+        x = int(self.x / CELL_SIZE)
+        y = int(self.y / CELL_SIZE)
+        return (x, y)
 
     def tick(self):
         '''Send location to other player'''
@@ -232,17 +234,71 @@ class OtherPlayer(pygame.sprite.Sprite):
 
             # Host player changed direction
             elif (data[0] == "direction"):
-                direction = int(data[1])
+                self.currentDirection = int(data[1])
+                self.changedDir = 1
 
             # Host player changed speed
             elif (data[0] == "speed"):
-                speed = int(data[1])
-
+                self.moveAmount = int(data[1])
+            
         # UPDATE Player 1 (host player) with received data
-
-    def move(self):
-        pass
-
+        tup = self.get_array_pos()
+        boardVal = 0
+        if not self.dead:
+            if self.currentDirection == 0:
+                if self.y - self.moveAmount < 0:
+                    self.dead = 1
+                    return
+                if self.moveAmount == 20 and not self.changedDir:
+                    self.gs.gameboard.board[tup[1]+1][tup[0]] = 11
+                elif self.moveAmount == 30 and not self.changedDir:
+                    self.gs.gameboard.board[tup[1]+1][tup[0]] = 11
+                    self.gs.gameboard.board[tup[1]+2][tup[0]] = 11
+                boardVal = self.gs.gameboard.board[tup[1]-1][tup[0]]
+                self.gs.gameboard.board[tup[1]][tup[0]] = 11
+                self.gs.gameboard.board[tup[1]-1][tup[0]] = 11
+                self.y -= self.moveAmount 
+            elif self.currentDirection == 2:
+                if self.y + self.moveAmount > self.gs.height - CELL_SIZE:
+                    self.dead = 1
+                    return
+                if moveAmount == 20 and not self.changedDir:
+                    self.gs.gameboard.board[tup[1]-1][tup[0]] = 11
+                elif moveAmount == 30 and not self.changedDir:
+                    self.gs.gameboard.board[tup[1]-1][tup[0]] = 11
+                    self.gs.gameboard.board[tup[1]-2][tup[0]] = 11
+                boardVal = self.gs.gameboard.board[tup[1]+1][tup[0]]
+                self.gs.gameboard.board[tup[1]][tup[0]] = 11
+                self.gs.gameboard.board[tup[1]+1][tup[0]] = 11
+                self.y += self.moveAmount
+            elif self.currentDirection == 3:
+                if self.x - self.moveAmount < 0:
+                    self.dead = 1
+                    return
+                if self.moveAmount == 20 and not self.changedDir:
+                    self.gs.gameboard.board[tup[1]][tup[0]+1] = 11
+                elif self.moveAmount == 30 and not self.changedDir:
+                    self.gs.gameboard.board[tup[1]][tup[0]+1] = 11
+                    self.gs.gameboard.board[tup[1]][tup[0]+2] = 11
+                boardVal = self.gs.gameboard.board[tup[1]][tup[0]-1]
+                self.gs.gameboard.board[tup[1]][tup[0]] = 11
+                self.gs.gameboard.board[tup[1]][tup[0]-1] = 11
+                self.x -= self.moveAmount
+            else:
+                if self.x + self.moveAmount > self.gs.width - CELL_SIZE:
+                    self.dead = 1
+                    return
+                if self.moveAmount == 20 and not self.changedDir:
+                        self.gs.gameboard.board[tup[1]][tup[0]-1] = 11
+                elif self.moveAmount == 30 and not self.changedDir:
+                        self.gs.gameboard.board[tup[1]][tup[0]-1] = 11
+                        self.gs.gameboard.board[tup[1]][tup[0]-2] = 11
+                boardVal = self.gs.gameboard.board[tup[1]][tup[0]+1]
+                self.gs.gameboard.board[tup[1]][tup[0]] = 11
+                self.gs.gameboard.board[tup[1]][tup[0]+1] = 11
+                self.x += self.moveAmount
+            self.rect.topleft = (self.x, self.y)
+            self.changedDir = 1
 
 class GameSpace:
 
@@ -414,7 +470,7 @@ class GameSpace:
                         self.screen.blit(img, rect)
                     elif self.gameboard.board[y][x] == 22:
                         tup = self.get_real_pos(y, x)
-                        if self.who == "client":
+                        if self.who == "host":
                             img = self.gabetrail
                         else:
                             img = self.dogetrail

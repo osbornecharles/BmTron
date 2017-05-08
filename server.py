@@ -80,9 +80,6 @@ class DataConnection(Protocol):
     def sendSizeChange(self):
         self.transport.write("size".encode())
 
-    def sendPowerupEnd(self):
-        self.transport.write("powerupEnd".encode())
-
 
 # ======================= CONNECTION FACTORY ==================================
 class CommandConnectionFactory(ServerFactory):
