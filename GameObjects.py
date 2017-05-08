@@ -277,9 +277,9 @@ class OtherPlayer(pygame.sprite.Sprite):
                 if self.y + self.moveAmount > self.gs.height - CELL_SIZE:
                     self.dead = 1
                     return
-                if moveAmount == 20 and not self.changedDir:
+                if self.moveAmount == 20 and not self.changedDir:
                     self.gs.gameboard.board[tup[1]-1][tup[0]] = self.trail
-                elif moveAmount == 30 and not self.changedDir:
+                elif self.moveAmount == 30 and not self.changedDir:
                     self.gs.gameboard.board[tup[1]-1][tup[0]] = self.trail
                     self.gs.gameboard.board[tup[1]-2][tup[0]] = self.trail
                 boardVal = self.gs.gameboard.board[tup[1]+1][tup[0]]
@@ -476,19 +476,13 @@ class GameSpace:
             for x in range(0, len(self.gameboard.board[0])):
                     if self.gameboard.board[y][x] == 11:
                         tup = self.get_real_pos(y, x)
-                        if self.who == "host":
-                            img = self.gabetrail
-                        else:
-                            img = self.dogetrail
+                        img = self.gabetrail
                         rect = img.get_rect()
                         rect.topleft = tup 
                         self.screen.blit(img, rect)
                     elif self.gameboard.board[y][x] == 22:
                         tup = self.get_real_pos(y, x)
-                        if self.who == "host":
-                            img = self.gabetrail
-                        else:
-                            img = self.dogetrail
+                        img = self.dogetrail
                         rect = img.get_rect()
                         rect.topleft = tup 
                         self.screen.blit(img, rect)
