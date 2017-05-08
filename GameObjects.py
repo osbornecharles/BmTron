@@ -48,6 +48,7 @@ class Player(pygame.sprite.Sprite):
         self.powerUpTurns = 0
         self.currentDirection = 1
         self.gs = gamespace
+        self.changedDir = 0
 
     def get_array_pos(self):
         x = int(self.x / CELL_SIZE)
@@ -68,68 +69,56 @@ class Player(pygame.sprite.Sprite):
                     self.dead = 1
                     self.gs.factory.data_connection.sendCollision()
                     return
-                if moveAmount == 20:
+                if moveAmount == 20 and not self.changedDir:
                     self.gs.gameboard.board[tup[1]+1][tup[0]] = 11
-                    self.gs.gameboard.board[tup[1]][tup[0]] = 11
-                elif moveAmount == 30:
+                elif moveAmount == 30 and not self.changedDir:
                     self.gs.gameboard.board[tup[1]+1][tup[0]] = 11
                     self.gs.gameboard.board[tup[1]+2][tup[0]] = 11
-                    self.gs.gameboard.board[tup[1]][tup[0]] = 11
-                else:
-                    self.gs.gameboard.board[tup[1]][tup[0]] = 11
                 boardVal = self.gs.gameboard.board[tup[1]-1][tup[0]]
-                self.gs.gameboard.board[tup[1]-1][tup[0]] = 1
+                self.gs.gameboard.board[tup[1]][tup[0]] = 11
+                self.gs.gameboard.board[tup[1]-1][tup[0]] = 11
                 self.y -= moveAmount 
             elif self.currentDirection == 2:
                 if self.y + moveAmount > self.gs.height - CELL_SIZE:
                     self.dead = 1
                     self.gs.factory.data_connection.sendCollision()
                     return
-                if moveAmount == 20:
+                if moveAmount == 20 and not self.changedDir:
                     self.gs.gameboard.board[tup[1]-1][tup[0]] = 11
-                    self.gs.gameboard.board[tup[1]][tup[0]] = 11
-                elif moveAmount == 30:
+                elif moveAmount == 30 and not self.changedDir:
                     self.gs.gameboard.board[tup[1]-1][tup[0]] = 11
                     self.gs.gameboard.board[tup[1]-2][tup[0]] = 11
-                    self.gs.gameboard.board[tup[1]][tup[0]] = 11
-                else:
-                    self.gs.gameboard.board[tup[1]][tup[0]] = 11
                 boardVal = self.gs.gameboard.board[tup[1]+1][tup[0]]
-                self.gs.gameboard.board[tup[1]+1][tup[0]] = 1
+                self.gs.gameboard.board[tup[1]][tup[0]] = 11
+                self.gs.gameboard.board[tup[1]+1][tup[0]] = 11
                 self.y += moveAmount
             elif self.currentDirection == 3:
                 if self.x - moveAmount < 0:
                     self.dead = 1
                     self.gs.factory.data_connection.sendCollision()
                     return
-                if moveAmount == 20:
+                if moveAmount == 20 and not self.changedDir:
                     self.gs.gameboard.board[tup[1]][tup[0]+1] = 11
-                    self.gs.gameboard.board[tup[1]][tup[0]] = 11
-                elif moveAmount == 30:
+                elif moveAmount == 30 and not self.changedDir:
                     self.gs.gameboard.board[tup[1]][tup[0]+1] = 11
                     self.gs.gameboard.board[tup[1]][tup[0]+2] = 11
-                    self.gs.gameboard.board[tup[1]][tup[0]] = 11
-                else:
-                    self.gs.gameboard.board[tup[1]][tup[0]] = 11
                 boardVal = self.gs.gameboard.board[tup[1]][tup[0]-1]
-                self.gs.gameboard.board[tup[1]][tup[0]-1] = 1
+                self.gs.gameboard.board[tup[1]][tup[0]] = 11
+                self.gs.gameboard.board[tup[1]][tup[0]-1] = 11
                 self.x -= moveAmount
             else:
                 if self.x + moveAmount > self.gs.width - CELL_SIZE:
                     self.dead = 1
                     self.gs.factory.data_connection.sendCollision()
                     return
-                if moveAmount == 20:
-                    self.gs.gameboard.board[tup[1]][tup[0]-1] = 11
-                    self.gs.gameboard.board[tup[1]][tup[0]] = 11
-                elif moveAmount == 30:
-                    self.gs.gameboard.board[tup[1]][tup[0]-1] = 11
-                    self.gs.gameboard.board[tup[1]][tup[0]-2] = 11
-                    self.gs.gameboard.board[tup[1]][tup[0]] = 11
-                else:
-                    self.gs.gameboard.board[tup[1]][tup[0]] = 11
+                if moveAmount == 20 and not self.changedDir:
+                        self.gs.gameboard.board[tup[1]][tup[0]-1] = 11
+                elif moveAmount == 30 and not self.changedDir:
+                        self.gs.gameboard.board[tup[1]][tup[0]-1] = 11
+                        self.gs.gameboard.board[tup[1]][tup[0]-2] = 11
                 boardVal = self.gs.gameboard.board[tup[1]][tup[0]+1]
-                self.gs.gameboard.board[tup[1]][tup[0]+1] = 1
+                self.gs.gameboard.board[tup[1]][tup[0]] = 11
+                self.gs.gameboard.board[tup[1]][tup[0]+1] = 11
                 self.x += moveAmount
             self.rect.topleft = (self.x, self.y)
         self.powerUpTurns -= 1
@@ -308,7 +297,6 @@ class GameSpace:
 
     def titleloop(self):
         # Stay at title scene if both players have not selected start
-        print('looping')
         if (not self.factory.command_connection.start()):
             for event in pygame.event.get():
                 # Close pygame
@@ -372,7 +360,7 @@ class GameSpace:
         print("In game scene: started game loop")
 
     def gameloop(self):
-        print(self.you.rect)
+        numMoves = 0
         for event in pygame.event.get():
             # Close pygame
             if event.type == pygame.QUIT:
@@ -385,16 +373,33 @@ class GameSpace:
                     self.factory.command_connection.sendEnd()
                     reactor.stop()
                 elif (event.key == pygame.K_UP):
-                    self.you.move_up()
+                    if self.you.currentDirection != 0:
+                        numMoves += 1
+                        self.you.changedDir = 1
+                        self.you.move_up()
                 elif (event.key == pygame.K_DOWN):
-                    self.you.move_down()
+                    if self.you.currentDirection != 2:
+                        numMoves += 1
+                        self.you.changedDir = 1
+                        self.you.move_down()
                 elif (event.key == pygame.K_RIGHT):
-                    self.you.move_right()
+                    if self.you.currentDirection != 1:
+                        numMoves += 1
+                        self.you.changedDir = 1
+                        self.you.move_right()
                 elif (event.key == pygame.K_LEFT):
-                    self.you.move_left()
+                    if self.you.currentDirection != 3:
+                        numMoves += 1
+                        self.you.changedDir = 1
+                        self.you.move_left()
+        if numMoves == 0:
+            self.you.changedDir = 0
+            self.you.updatePlayer()
     
         for obj in self.all_objects:
             obj.tick()
+
+        self.screen.fill(self.black)
 
         for y in range(0, len(self.gameboard.board)):
             for x in range(0, len(self.gameboard.board[0])):
@@ -432,7 +437,6 @@ class GameSpace:
                         rect.topleft = tup 
                         self.screen.blit(self.energy, rect)
                         
-
         self.screen.blit(self.you.image, self.you.rect)
         self.screen.blit(self.other.image, self.other.rect)
         pygame.display.flip()
