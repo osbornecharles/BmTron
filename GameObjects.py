@@ -5,6 +5,7 @@ import json
 
 mediafile = "./mediafiles/"
 CELL_SIZE = 10
+SYNC_FREQ = 5
 
 class Board():
     def __init__(self, gamespace):
@@ -58,7 +59,6 @@ class Player(pygame.sprite.Sprite):
         return (x, y)
 
     def tick(self, totalTicks):
-
         x,y = self.get_array_pos()
         boardVal = 0
         boardVal2 = 0
@@ -191,50 +191,50 @@ class Player(pygame.sprite.Sprite):
                 self.x += moveAmount
             self.rect.topleft = (self.x, self.y)
             
-            # Synchronize 2 times a second
-            if (not totalTicks % 30):
-                print("Synchronizing")
-                self.gs.factory.data_connection.sendData(self.x, self.y, self.currentDirection)
+        # Synchronize 2 times a second
+        if (not totalTicks % SYNC_FREQ):
+            print("Synchronizing: {}".format(totalTicks))
+            self.gs.factory.data_connection.sendData(self.x, self.y, self.currentDirection)
 
     def move_up(self, totalTicks):
-        print("UP")
         if self.currentDirection == 2:
             self.dead = 1
             self.gs.factory.data_connection.sendCollision()
             return
-        if (totalTicks % 30):
-            self.gs.factory.data_connection.sendDirection(0)
         self.currentDirection = 0
+        if (totalTicks % SYNC_FREQ):
+            print("UP: {}".format(totalTicks))
+            self.gs.factory.data_connection.sendDirection(0)
 
     def move_down(self, totalTicks): 
-        print("DOWN")
         if self.currentDirection == 0:
             self.dead = 1
             self.gs.factory.data_connection.sendCollision()
             return
-        if (totalTicks % 30):
-            self.gs.factory.data_connection.sendDirection(2)
         self.currentDirection = 2
+        if (totalTicks % SYNC_FREQ):
+            print("DOWN: {}".format(totalTicks))
+            self.gs.factory.data_connection.sendDirection(2)
 
     def move_left(self, totalTicks): 
-        print("LEFT")
         if self.currentDirection == 1:
             self.dead = 1
             self.gs.factory.data_connection.sendCollision()
             return
-        if (totalTicks % 30):
-            self.gs.factory.data_connection.sendDirection(3)
         self.currentDirection = 3
+        if (totalTicks % SYNC_FREQ):
+            print("LEFT: {}".format(totalTicks))
+            self.gs.factory.data_connection.sendDirection(3)
 
     def move_right(self, totalTicks):
-        print("RIGHT")
         if self.currentDirection == 3:
             self.dead = 1
             self.gs.factory.data_connection.sendCollision()
             return
-        if (totalTicks % 30):
-            self.gs.factory.data_connection.sendDirection(1)
         self.currentDirection = 1
+        if (totalTicks % SYNC_FREQ):
+            print("RIGHT: {}".format(totalTicks))
+            self.gs.factory.data_connection.sendDirection(1)
 
 class OtherPlayer(pygame.sprite.Sprite):
     def __init__(self, x, y, image, name, gamespace):
@@ -282,7 +282,7 @@ class OtherPlayer(pygame.sprite.Sprite):
                 elif key == "dir":
                     self.currentDirection = int(value)
             
-        # UPDATE Player 1 (host player) with received data
+        # UPDATE other player with received data
         x,y = self.get_array_pos()
         if not self.dead:
             if self.currentDirection == 0:
@@ -364,7 +364,7 @@ class GameSpace:
         self.size = self.width, self.height = 640, 420
         self.black = 0,0,0
         self.screen = pygame.display.set_mode(self.size)
-        pygame.key.set_repeat(10, 30)
+        #pygame.key.set_repeat(10, 30)
 
         bigfont = pygame.font.Font(None, 40)
         if (self.who == "host"):
@@ -447,7 +447,6 @@ class GameSpace:
                         reactor.stop()
                 # Mouse detection
                 elif event.type == pygame.MOUSEBUTTONDOWN:
-                    print('clicked')
                     mouse_pos = pygame.mouse.get_pos()
                     # User clicked start
                     if self.startButton.collidepoint(mouse_pos):
@@ -522,7 +521,6 @@ class GameSpace:
                         self.factory.command_connection.sendEnd()
                         reactor.stop()
                     elif (event.key == pygame.K_UP):
-                        print('pos', self.you.get_array_pos())
                         if self.you.currentDirection != 0:
                             self.you.move_up(self.totalTicks)
                     elif (event.key == pygame.K_DOWN):
