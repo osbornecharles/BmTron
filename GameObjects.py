@@ -52,6 +52,7 @@ class Player(pygame.sprite.Sprite):
         self.powerUpTurns = 0
         self.gs = gamespace
         self.gs.gameboard.putOnBoard(self, int(self.x/CELL_SIZE), int(self.y/CELL_SIZE))
+        self.moveAmount = 20
 
     def get_array_pos(self):
         x = int(self.x / CELL_SIZE)
@@ -112,89 +113,89 @@ class Player(pygame.sprite.Sprite):
             self.powerUpTurns = 5
 
         if not self.dead:
-            moveAmount = 20
+            #moveAmount = 20
             if self.slow:
-                moveAmount = 10
+                self.moveAmount = 10
             elif self.fast:
-                moveAmount = 30
+                self.moveAmount = 30
             # Moving up
             if self.currentDirection == 0:
                 # Collided into top wall
-                if self.y - moveAmount < 0:
+                if self.y - self.moveAmount < 0:
                     self.dead = 1
                     self.gs.factory.data_connection.sendCollision()
                     return
-                if moveAmount == 20:
+                if self.moveAmount == 20:
                     self.gs.gameboard.board[y-1][x] = self.trail
                     self.gs.gameboard.board[y-2][x] = 1
-                elif moveAmount == 30:
+                elif self.moveAmount == 30:
                     self.gs.gameboard.board[y-1][x] = self.trail
                     self.gs.gameboard.board[y-2][x] = self.trail
                     self.gs.gameboard.board[y-3][x] = 1
                 else:
                     self.gs.gameboard.board[y-1][x] = 1
                 self.gs.gameboard.board[y][x] = self.trail
-                self.y -= moveAmount 
+                self.y -= self.moveAmount 
             # Moving down
             elif self.currentDirection == 2:
                 # Collided into bottom wall
-                if self.y + moveAmount > self.gs.height - CELL_SIZE:
+                if self.y + self.moveAmount > self.gs.height - CELL_SIZE:
                     self.dead = 1
                     self.gs.factory.data_connection.sendCollision()
                     return
-                if moveAmount == 20:
+                if self.moveAmount == 20:
                     self.gs.gameboard.board[y+1][x] = self.trail
                     self.gs.gameboard.board[y+2][x] = 1
-                elif moveAmount == 30:
+                elif self.moveAmount == 30:
                     self.gs.gameboard.board[y+1][x] = self.trail
                     self.gs.gameboard.board[y+2][x] = self.trail
                     self.gs.gameboard.board[y+3][x] = 1
                 else:
                     self.gs.gameboard.board[y+1][x] = 1
                 self.gs.gameboard.board[y][x] = self.trail
-                self.y += moveAmount
+                self.y += self.moveAmount
             # Moving left
             elif self.currentDirection == 3:
                 # Collided into left wall
-                if self.x - moveAmount < 0:
+                if self.x - self.moveAmount < 0:
                     self.dead = 1
                     self.gs.factory.data_connection.sendCollision()
                     return
-                if moveAmount == 20:
+                if self.moveAmount == 20:
                     self.gs.gameboard.board[y][x-1] = self.trail
                     self.gs.gameboard.board[y][x-2] = 1
-                elif moveAmount == 30:
+                elif self.moveAmount == 30:
                     self.gs.gameboard.board[y][x-1] = self.trail
                     self.gs.gameboard.board[y][x-2] = self.trail
                     self.gs.gameboard.board[y][x-3] = 1
                 else:
                     self.gs.gameboard.board[y][x-1] = 1
                 self.gs.gameboard.board[y][x] = self.trail
-                self.x -= moveAmount
+                self.x -= self.moveAmount
             # Moving right
             else:
                 # Collided into right wall
-                if self.x + moveAmount > self.gs.width - CELL_SIZE:
+                if self.x + self.moveAmount > self.gs.width - CELL_SIZE:
                     self.dead = 1
                     self.gs.factory.data_connection.sendCollision()
                     return
-                if moveAmount == 20:
+                if self.moveAmount == 20:
                     self.gs.gameboard.board[y][x+1] = self.trail
                     self.gs.gameboard.board[y][x+2] = 1
-                elif moveAmount == 30:
+                elif self.moveAmount == 30:
                     self.gs.gameboard.board[y][x+1] = self.trail
                     self.gs.gameboard.board[y][x+2] = self.trail
                     self.gs.gameboard.board[y][x+3] = 1
                 else:
                     self.gs.gameboard.board[y][x+1] = 1
                 self.gs.gameboard.board[y][x] = self.trail
-                self.x += moveAmount
+                self.x += self.moveAmount
             self.rect.topleft = (self.x, self.y)
             
         # Synchronize 2 times a second
         if (not totalTicks % SYNC_FREQ):
             print("Synchronizing: {}".format(totalTicks))
-            self.gs.factory.data_connection.sendData(self.x, self.y, self.currentDirection)
+            self.gs.factory.data_connection.sendData(self.x, self.y, self.currentDirection, self.moveAmount)
 
     def move_up(self, totalTicks):
         if self.currentDirection == 2:
@@ -204,7 +205,8 @@ class Player(pygame.sprite.Sprite):
         self.currentDirection = 0
         if (totalTicks % SYNC_FREQ):
             print("UP: {}".format(totalTicks))
-            self.gs.factory.data_connection.sendDirection(0)
+            #self.gs.factory.data_connection.sendDirection(0)
+            self.gs.factory.data_connection.sendData(self.x, self.y, self.currentDirection, self.moveAmount)
 
     def move_down(self, totalTicks): 
         if self.currentDirection == 0:
@@ -214,7 +216,8 @@ class Player(pygame.sprite.Sprite):
         self.currentDirection = 2
         if (totalTicks % SYNC_FREQ):
             print("DOWN: {}".format(totalTicks))
-            self.gs.factory.data_connection.sendDirection(2)
+            #self.gs.factory.data_connection.sendDirection(2)
+            self.gs.factory.data_connection.sendData(self.x, self.y, self.currentDirection, self.moveAmount)
 
     def move_left(self, totalTicks): 
         if self.currentDirection == 1:
@@ -224,7 +227,8 @@ class Player(pygame.sprite.Sprite):
         self.currentDirection = 3
         if (totalTicks % SYNC_FREQ):
             print("LEFT: {}".format(totalTicks))
-            self.gs.factory.data_connection.sendDirection(3)
+            #self.gs.factory.data_connection.sendDirection(3)
+            self.gs.factory.data_connection.sendData(self.x, self.y, self.currentDirection, self.moveAmount)
 
     def move_right(self, totalTicks):
         if self.currentDirection == 3:
@@ -234,7 +238,8 @@ class Player(pygame.sprite.Sprite):
         self.currentDirection = 1
         if (totalTicks % SYNC_FREQ):
             print("RIGHT: {}".format(totalTicks))
-            self.gs.factory.data_connection.sendDirection(1)
+            #self.gs.factory.data_connection.sendDirection(1)
+            self.gs.factory.data_connection.sendData(self.x, self.y, self.currentDirection, self.moveAmount)
 
 class OtherPlayer(pygame.sprite.Sprite):
     def __init__(self, x, y, image, name, gamespace):
@@ -252,7 +257,7 @@ class OtherPlayer(pygame.sprite.Sprite):
         else:
             self.currentDirection = 3
             self.trail = 22
-        self.moveAmount = 20
+        self.moveAmount = 0
         self.gs = gamespace
         self.gs.gameboard.putOnBoard(self, int(self.x/CELL_SIZE), int(self.y/CELL_SIZE))
 
@@ -268,7 +273,10 @@ class OtherPlayer(pygame.sprite.Sprite):
         dataQueue = self.gs.factory.data_connection.returnData()
         while (not dataQueue.empty()):
             data = dataQueue.get()
-            data = json.loads(data) # dictionary
+            try:
+                data = json.loads(data) # dictionary
+            except:
+                print("OtherPlayer: could not decode data {}".format(data))
 
             for key, value in data.items():
                 if key == "state":
@@ -281,14 +289,16 @@ class OtherPlayer(pygame.sprite.Sprite):
                     self.y = int(value)
                 elif key == "dir":
                     self.currentDirection = int(value)
+                elif key == "speed":
+                    self.moveAmount = int(value)
             
         # UPDATE other player with received data
         x,y = self.get_array_pos()
         if not self.dead:
             if self.currentDirection == 0:
-                if self.y - self.moveAmount < 0:
-                    self.dead = 1
-                    return
+                #if self.y - self.moveAmount < 0:
+                #    self.dead = 1
+                #    return
                 if self.moveAmount == 20:
                     self.gs.gameboard.board[y-1][x] = self.trail
                     self.gs.gameboard.board[y-2][x] = 2 
@@ -298,13 +308,12 @@ class OtherPlayer(pygame.sprite.Sprite):
                     self.gs.gameboard.board[y-3][x] = 2
                 else:
                     self.gs.gameboard.board[y-1][x] = 2
-                print('up pos', x, y)
                 self.gs.gameboard.board[y][x] = self.trail
                 self.y -= self.moveAmount 
             elif self.currentDirection == 2:
-                if self.y + self.moveAmount > self.gs.height - CELL_SIZE:
-                    self.dead = 1
-                    return
+                #if self.y + self.moveAmount > self.gs.height - CELL_SIZE:
+                #    self.dead = 1
+                #    return
                 if self.moveAmount == 20:
                     self.gs.gameboard.board[y+1][x] = self.trail
                     self.gs.gameboard.board[y+2][x] = 2 
@@ -317,9 +326,9 @@ class OtherPlayer(pygame.sprite.Sprite):
                 self.gs.gameboard.board[y][x] = self.trail
                 self.y += self.moveAmount
             elif self.currentDirection == 3:
-                if self.x - self.moveAmount < 0:
-                    self.dead = 1
-                    return
+                #if self.x - self.moveAmount < 0:
+                #    self.dead = 1
+                #    return
                 if self.moveAmount == 20:
                     self.gs.gameboard.board[y][x-1] = self.trail
                     self.gs.gameboard.board[y][x-2] = 2 
@@ -332,9 +341,9 @@ class OtherPlayer(pygame.sprite.Sprite):
                 self.gs.gameboard.board[y][x] = self.trail
                 self.x -= self.moveAmount
             else:
-                if self.x + self.moveAmount > self.gs.width - CELL_SIZE:
-                    self.dead = 1
-                    return
+                #if self.x + self.moveAmount > self.gs.width - CELL_SIZE:
+                #    self.dead = 1
+                #    return
                 if self.moveAmount == 20:
                     self.gs.gameboard.board[y][x+1] = self.trail
                     self.gs.gameboard.board[y][x+2] = 2 

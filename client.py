@@ -107,11 +107,12 @@ class DataConnection(Protocol):
     def sendSizeChange(self):
         self.transport.write("size".encode())
 
-    def sendData(self, x, y, direction):
+    def sendData(self, x, y, direction, speed):
         data = {}
         data["x"] = x
         data["y"] = y
         data["dir"] = direction
+        data["speed"] = speed
         self.transport.write((json.dumps(data)).encode())
 
 
