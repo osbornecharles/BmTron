@@ -6,11 +6,10 @@ from twisted.internet import reactor
 from twisted.python import log
 from queue import *
 import sys
-import queue
 log.startLogging(sys.stdout)
 
 COMMAND_PORT = 41148
-DATA_PORT = 42148
+DATA_PORT    = 42148
 
 
 # ======================= CONNECTIONS =========================================
@@ -20,6 +19,9 @@ class CommandConnection(Protocol):
         self.factory = factory
         self.sentStart = 0
         self.receivedStart = 0
+        self.ready = False
+        self.sentGo = 0
+        self.receivedGo = 0
 
     def connectionMade(self):
         print("Command connection: created between host and client players")
@@ -34,6 +36,11 @@ class CommandConnection(Protocol):
         self.transport.write("Start pressed".encode())
         self.sentStart = 1
 
+    def sendGo(self):
+        print('sent go')
+        self.sentGo = 1
+        self.transport.write("Go".encode())
+
     def sendEnd(self):
         print("Command connection: sent end to client")
         self.transport.write("Host quit".encode())
@@ -42,11 +49,19 @@ class CommandConnection(Protocol):
         print('got data', data.decode())
         if(data.decode() == 'Start pressed'):
             self.receivedStart = 1
+        elif(data.decode() == "Go"):
+            print('received go')
+            self.receivedGo = 1
         elif (data.decode() == "Client quit"):
             print("Command connection: client player quit")
+        elif (data.decode() == "Connections established"):
+            self.ready = True
     
     def start(self):
         return self.receivedStart and self.sentStart
+
+    def go(self):
+        return self.receivedGo and self.sentGo
 
 class DataConnection(Protocol):
     '''Handles data connection between home.py and work.py'''
