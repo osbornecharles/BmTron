@@ -196,40 +196,44 @@ class Player(pygame.sprite.Sprite):
                 print("Synchronizing")
                 self.gs.factory.data_connection.sendData(self.x, self.y, self.currentDirection)
 
-    def move_up(self):
+    def move_up(self, totalTicks):
         print("UP")
         if self.currentDirection == 2:
             self.dead = 1
             self.gs.factory.data_connection.sendCollision()
             return
-        self.gs.factory.data_connection.sendDirection(0)
+        if (totalTicks % 30):
+            self.gs.factory.data_connection.sendDirection(0)
         self.currentDirection = 0
 
-    def move_down(self): 
+    def move_down(self, totalTicks): 
         print("DOWN")
         if self.currentDirection == 0:
             self.dead = 1
             self.gs.factory.data_connection.sendCollision()
             return
-        self.gs.factory.data_connection.sendDirection(2)
+        if (totalTicks % 30):
+            self.gs.factory.data_connection.sendDirection(2)
         self.currentDirection = 2
 
-    def move_left(self): 
+    def move_left(self, totalTicks): 
         print("LEFT")
         if self.currentDirection == 1:
             self.dead = 1
             self.gs.factory.data_connection.sendCollision()
             return
-        self.gs.factory.data_connection.sendDirection(3)
+        if (totalTicks % 30):
+            self.gs.factory.data_connection.sendDirection(3)
         self.currentDirection = 3
 
-    def move_right(self):
+    def move_right(self, totalTicks):
         print("RIGHT")
         if self.currentDirection == 3:
             self.dead = 1
             self.gs.factory.data_connection.sendCollision()
             return
-        self.gs.factory.data_connection.sendDirection(1)
+        if (totalTicks % 30):
+            self.gs.factory.data_connection.sendDirection(1)
         self.currentDirection = 1
 
 class OtherPlayer(pygame.sprite.Sprite):
@@ -520,16 +524,16 @@ class GameSpace:
                     elif (event.key == pygame.K_UP):
                         print('pos', self.you.get_array_pos())
                         if self.you.currentDirection != 0:
-                            self.you.move_up()
+                            self.you.move_up(self.totalTicks)
                     elif (event.key == pygame.K_DOWN):
                         if self.you.currentDirection != 2:
-                            self.you.move_down()
+                            self.you.move_down(self.totalTicks)
                     elif (event.key == pygame.K_RIGHT):
                         if self.you.currentDirection != 1:
-                            self.you.move_right()
+                            self.you.move_right(self.totalTicks)
                     elif (event.key == pygame.K_LEFT):
                         if self.you.currentDirection != 3:
-                            self.you.move_left()
+                            self.you.move_left(self.totalTicks)
         
             for obj in self.all_objects:
                 obj.tick(self.totalTicks)
