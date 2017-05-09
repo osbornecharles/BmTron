@@ -54,7 +54,7 @@ class Player(pygame.sprite.Sprite):
         return (x, y)
 
     def tick(self):
-        tup = self.get_array_pos()
+        x,y = self.get_array_pos()
         boardVal = 0
         if not self.dead:
             moveAmount = 20
@@ -62,61 +62,69 @@ class Player(pygame.sprite.Sprite):
                 moveAmount = 10
             elif self.fast:
                 moveAmount = 30
+            # Moving up
             if self.currentDirection == 0:
+                # Collided into top wall
                 if self.y - moveAmount < 0:
                     self.dead = 1
                     self.gs.factory.data_connection.sendCollision()
                     return
                 if moveAmount == 20 and not self.changedDir:
-                    self.gs.gameboard.board[tup[1]+1][tup[0]] = self.trail
+                    self.gs.gameboard.board[y+1][x] = self.trail
                 elif moveAmount == 30 and not self.changedDir:
-                    self.gs.gameboard.board[tup[1]+1][tup[0]] = self.trail
-                    self.gs.gameboard.board[tup[1]+2][tup[0]] = self.trail
-                boardVal = self.gs.gameboard.board[tup[1]-1][tup[0]]
-                self.gs.gameboard.board[tup[1]][tup[0]] = self.trail
-                self.gs.gameboard.board[tup[1]-1][tup[0]] = self.trail
+                    self.gs.gameboard.board[y+1][x] = self.trail
+                    self.gs.gameboard.board[y+2][x] = self.trail
+                boardVal = self.gs.gameboard.board[y-1][x]
+                self.gs.gameboard.board[y][x] = self.trail
+                self.gs.gameboard.board[y-1][x] = self.trail
                 self.y -= moveAmount 
+            # Moving down
             elif self.currentDirection == 2:
+                # Collided into bottom wall
                 if self.y + moveAmount > self.gs.height - CELL_SIZE:
                     self.dead = 1
                     self.gs.factory.data_connection.sendCollision()
                     return
                 if moveAmount == 20 and not self.changedDir:
-                    self.gs.gameboard.board[tup[1]-1][tup[0]] = self.trail
+                    self.gs.gameboard.board[y-1][x] = self.trail
                 elif moveAmount == 30 and not self.changedDir:
-                    self.gs.gameboard.board[tup[1]-1][tup[0]] = self.trail
-                    self.gs.gameboard.board[tup[1]-2][tup[0]] = self.trail
-                boardVal = self.gs.gameboard.board[tup[1]+1][tup[0]]
-                self.gs.gameboard.board[tup[1]][tup[0]] = self.trail
-                self.gs.gameboard.board[tup[1]+1][tup[0]] = self.trail
+                    self.gs.gameboard.board[y-1][x] = self.trail
+                    self.gs.gameboard.board[y-2][x] = self.trail
+                boardVal = self.gs.gameboard.board[y+1][x]
+                self.gs.gameboard.board[y][x] = self.trail
+                self.gs.gameboard.board[y+1][x] = self.trail
                 self.y += moveAmount
+            # Moving left
             elif self.currentDirection == 3:
+                # Collided into left wall
                 if self.x - moveAmount < 0:
                     self.dead = 1
                     self.gs.factory.data_connection.sendCollision()
                     return
                 if moveAmount == 20 and not self.changedDir:
-                    self.gs.gameboard.board[tup[1]][tup[0]+1] = self.trail
+                    self.gs.gameboard.board[y][x+1] = self.trail
                 elif moveAmount == 30 and not self.changedDir:
-                    self.gs.gameboard.board[tup[1]][tup[0]+1] = self.trail
-                    self.gs.gameboard.board[tup[1]][tup[0]+2] = self.trail
-                boardVal = self.gs.gameboard.board[tup[1]][tup[0]-1]
-                self.gs.gameboard.board[tup[1]][tup[0]] = self.trail
-                self.gs.gameboard.board[tup[1]][tup[0]-1] = self.trail
+                    self.gs.gameboard.board[y][x+1] = self.trail
+                    self.gs.gameboard.board[y][x+2] = self.trail
+                boardVal = self.gs.gameboard.board[y][x-1]
+                self.gs.gameboard.board[y][x] = self.trail
+                self.gs.gameboard.board[y][x-1] = self.trail
                 self.x -= moveAmount
+            # Moving right
             else:
+                # Collided into right wall
                 if self.x + moveAmount > self.gs.width - CELL_SIZE:
                     self.dead = 1
                     self.gs.factory.data_connection.sendCollision()
                     return
                 if moveAmount == 20 and not self.changedDir:
-                        self.gs.gameboard.board[tup[1]][tup[0]-1] = self.trail
+                        self.gs.gameboard.board[y][x-1] = self.trail
                 elif moveAmount == 30 and not self.changedDir:
-                        self.gs.gameboard.board[tup[1]][tup[0]-1] = self.trail
-                        self.gs.gameboard.board[tup[1]][tup[0]-2] = self.trail
-                boardVal = self.gs.gameboard.board[tup[1]][tup[0]+1]
-                self.gs.gameboard.board[tup[1]][tup[0]] = self.trail
-                self.gs.gameboard.board[tup[1]][tup[0]+1] = self.trail
+                        self.gs.gameboard.board[y][x-1] = self.trail
+                        self.gs.gameboard.board[y][x-2] = self.trail
+                boardVal = self.gs.gameboard.board[y][x+1]
+                self.gs.gameboard.board[y][x] = self.trail
+                self.gs.gameboard.board[y][x+1] = self.trail
                 self.x += moveAmount
             self.rect.topleft = (self.x, self.y)
         self.powerUpTurns -= 1
@@ -125,18 +133,22 @@ class Player(pygame.sprite.Sprite):
             self.fat = 0
             self.slow = 0
             self.fast = 0
+
+        # Collided into Gabe
         if boardVal == 1:
             self.dead = 1
             self.gs.factory.data_connection.sendCollision()
+            return
+        # Collided into Doge
         elif boardVal == 2:
             self.dead = 1
             self.gs.factory.data_connection.sendCollision()
+            return
+        # Collided into trail
         elif boardVal == 11 or boardVal == 22:
             self.dead = 1
             self.gs.factory.data_connection.sendCollision()
-        elif boardVal == self.trail:
-            self.dead = 1
-            self.gs.factory.data_connection.sendCollision()
+            return
         elif boardVal == 3:
             self.fat = 1
             self.powerUpTurns = 5
@@ -165,7 +177,7 @@ class Player(pygame.sprite.Sprite):
             self.dead = 1
             self.gs.factory.data_connection.sendCollision()
             return
-        tup = self.get_array_pos()
+        #tup = self.get_array_pos()
         self.gs.factory.data_connection.sendDirection(2)
         self.currentDirection = 2
 
@@ -244,7 +256,7 @@ class OtherPlayer(pygame.sprite.Sprite):
                 self.moveAmount = int(data[1])
             
         # UPDATE Player 1 (host player) with received data
-        tup = self.get_array_pos()
+        x,y = self.get_array_pos()
         boardVal = 0
         if not self.dead:
             if self.currentDirection == 0:
@@ -252,52 +264,52 @@ class OtherPlayer(pygame.sprite.Sprite):
                     self.dead = 1
                     return
                 if self.moveAmount == 20 and not self.changedDir:
-                    self.gs.gameboard.board[tup[1]+1][tup[0]] = self.trail
+                    self.gs.gameboard.board[y+1][x] = self.trail
                 elif self.moveAmount == 30 and not self.changedDir:
-                    self.gs.gameboard.board[tup[1]+1][tup[0]] = self.trail
-                    self.gs.gameboard.board[tup[1]+2][tup[0]] = self.trail
-                boardVal = self.gs.gameboard.board[tup[1]-1][tup[0]]
-                self.gs.gameboard.board[tup[1]][tup[0]] = self.trail
-                self.gs.gameboard.board[tup[1]-1][tup[0]] = self.trail
+                    self.gs.gameboard.board[y+1][x] = self.trail
+                    self.gs.gameboard.board[y+2][x] = self.trail
+                boardVal = self.gs.gameboard.board[y-1][x]
+                self.gs.gameboard.board[y][x] = self.trail
+                self.gs.gameboard.board[y-1][x] = self.trail
                 self.y -= self.moveAmount 
             elif self.currentDirection == 2:
                 if self.y + self.moveAmount > self.gs.height - CELL_SIZE:
                     self.dead = 1
                     return
                 if self.moveAmount == 20 and not self.changedDir:
-                    self.gs.gameboard.board[tup[1]-1][tup[0]] = self.trail
+                    self.gs.gameboard.board[y-1][x] = self.trail
                 elif self.moveAmount == 30 and not self.changedDir:
-                    self.gs.gameboard.board[tup[1]-1][tup[0]] = self.trail
-                    self.gs.gameboard.board[tup[1]-2][tup[0]] = self.trail
-                boardVal = self.gs.gameboard.board[tup[1]+1][tup[0]]
-                self.gs.gameboard.board[tup[1]][tup[0]] = self.trail
-                self.gs.gameboard.board[tup[1]+1][tup[0]] = self.trail
+                    self.gs.gameboard.board[y-1][x] = self.trail
+                    self.gs.gameboard.board[y-2][x] = self.trail
+                boardVal = self.gs.gameboard.board[y+1][x]
+                self.gs.gameboard.board[y][x] = self.trail
+                self.gs.gameboard.board[y+1][x] = self.trail
                 self.y += self.moveAmount
             elif self.currentDirection == 3:
                 if self.x - self.moveAmount < 0:
                     self.dead = 1
                     return
                 if self.moveAmount == 20 and not self.changedDir:
-                    self.gs.gameboard.board[tup[1]][tup[0]+1] = self.trail
+                    self.gs.gameboard.board[y][x+1] = self.trail
                 elif self.moveAmount == 30 and not self.changedDir:
-                    self.gs.gameboard.board[tup[1]][tup[0]+1] = self.trail
-                    self.gs.gameboard.board[tup[1]][tup[0]+2] = self.trail
-                boardVal = self.gs.gameboard.board[tup[1]][tup[0]-1]
-                self.gs.gameboard.board[tup[1]][tup[0]] = self.trail
-                self.gs.gameboard.board[tup[1]][tup[0]-1] = self.trail
+                    self.gs.gameboard.board[y][x+1] = self.trail
+                    self.gs.gameboard.board[y][x+2] = self.trail
+                boardVal = self.gs.gameboard.board[y][x-1]
+                self.gs.gameboard.board[y][x] = self.trail
+                self.gs.gameboard.board[y][x-1] = self.trail
                 self.x -= self.moveAmount
             else:
                 if self.x + self.moveAmount > self.gs.width - CELL_SIZE:
                     self.dead = 1
                     return
                 if self.moveAmount == 20 and not self.changedDir:
-                        self.gs.gameboard.board[tup[1]][tup[0]-1] = self.trail
+                        self.gs.gameboard.board[y][x-1] = self.trail
                 elif self.moveAmount == 30 and not self.changedDir:
-                        self.gs.gameboard.board[tup[1]][tup[0]-1] = self.trail
-                        self.gs.gameboard.board[tup[1]][tup[0]-2] = self.trail
-                boardVal = self.gs.gameboard.board[tup[1]][tup[0]+1]
-                self.gs.gameboard.board[tup[1]][tup[0]] = self.trail
-                self.gs.gameboard.board[tup[1]][tup[0]+1] = self.trail
+                        self.gs.gameboard.board[y][x-1] = self.trail
+                        self.gs.gameboard.board[y][x-2] = self.trail
+                boardVal = self.gs.gameboard.board[y][x+1]
+                self.gs.gameboard.board[y][x] = self.trail
+                self.gs.gameboard.board[y][x+1] = self.trail
                 self.x += self.moveAmount
             self.rect.topleft = (self.x, self.y)
             self.changedDir = 1
