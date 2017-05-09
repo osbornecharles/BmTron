@@ -45,12 +45,11 @@ class CommandConnection(Protocol):
             self.receivedStart = 1
         elif (data.decode() == "Client quit"):
             print("Command connection: client player quit")
+        elif (data.decode() == "Connections established"):
+            self.ready = True
     
     def start(self):
         return self.receivedStart and self.sentStart
-
-    def checkReady(self):
-        return self.ready
 
 class DataConnection(Protocol):
     '''Handles data connection between home.py and work.py'''
@@ -61,7 +60,6 @@ class DataConnection(Protocol):
     def connectionMade(self):
         '''Upon establishing data connection, start forwarding what is in client connection's queue'''
         print("Data conection: Created connection between host and client players")
-        self.factory.command_connection.ready = True
 
     def dataReceived(self, data):
         '''Use client conection to forward data from work.py to client'''
@@ -94,7 +92,6 @@ class CommandConnectionFactory(ServerFactory):
     def __init__(self):
         self.command_connection = CommandConnection(self)
         self.data_connection = ""
-        self.ready = False
 
     def buildProtocol(self, addr):
         return self.command_connection
