@@ -7,11 +7,10 @@ from twisted.internet.defer import DeferredQueue
 from twisted.python import log
 from queue import *
 import sys
-import queue 
 log.startLogging(sys.stdout)
 
 COMMAND_PORT = 41148
-DATA_PORT = 42148
+DATA_PORT    = 42148
 SERVER = "newt.campus.nd.edu"
 
 # ======================= CONNECTIONS =========================================
@@ -21,6 +20,7 @@ class CommandConnection(Protocol):
         self.factory = factory 
         self.sentStart = False
         self.receivedStart = False
+        self.ready = False
 
     def connectionMade(self):
         print("Command connection: created from host player to client player")
@@ -42,7 +42,6 @@ class CommandConnection(Protocol):
         if (data.decode() == "opened_dataport"):
             print("Command connection: client player connecting to host player's data port")
             # Create data connection
-            #self.factory = DataConnectionFactory(self.factory)
             reactor.connectTCP(SERVER, DATA_PORT, DataConnectionFactory(self.factory))
 
         # Host player clicked "start"
@@ -55,27 +54,29 @@ class CommandConnection(Protocol):
     def start(self):
         '''Return true only if both the host and the client players clicked "start"'''
         return self.sentStart and self.receivedStart
+    
+    def ready(self):
+        return self.ready
 
 
 class DataConnection(Protocol):
     '''Handles data connection between host and client players'''
     def __init__(self, factory):
         self.factory = factory
-        #self.queue = DeferredQueue()    # Queue to hold all data 
-        self.queue = queue.Queue()
+        self.queue = Queue()
 
     def connectionMade(self):
         '''Upon establishing data connection, create service connection'''
         print("Data connection: created data connection between client player and host player")
+        self.factory.command_connection.ready = True
 
     def dataReceived(self, data):
         '''Upon receiving data as a string, decode it and return as an array'''
         self.queue.put(data.decode())
-        #data = rawdata.decode().split() # array 
 
     def returnData(self):
         myQueue = self.queue
-        self.queue = queue.Queue() # new queue for next round of data
+        self.queue = Queue() # new queue for next round of data
         return myQueue
 
     def sendSpeed(self, speed):
@@ -92,9 +93,6 @@ class DataConnection(Protocol):
     def sendSizeChange(self):
         self.transport.write("size".encode())
 
-
-    #def sendRetrievedItem(self, item): 
-    #    self.transport.write(" ".join("item",  item).encode())
 
 # ==================== CONNECTION FACTORY =====================================
 class CommandConnectionFactory(ClientFactory):

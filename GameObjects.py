@@ -60,7 +60,7 @@ class Player(pygame.sprite.Sprite):
         y = int(self.y / CELL_SIZE)
         return (x, y)
 
-    def updatePlayer(self):
+    def tick(self):
         tup = self.get_array_pos()
         boardVal = 0
         if not self.dead:
@@ -165,7 +165,6 @@ class Player(pygame.sprite.Sprite):
             return
         self.gs.factory.data_connection.sendDirection(0)
         self.currentDirection = 0
-        self.updatePlayer()
 
     def move_down(self): 
         print("DOWN")
@@ -176,7 +175,6 @@ class Player(pygame.sprite.Sprite):
         tup = self.get_array_pos()
         self.gs.factory.data_connection.sendDirection(2)
         self.currentDirection = 2
-        self.updatePlayer()
 
     def move_left(self): 
         print("LEFT")
@@ -186,7 +184,6 @@ class Player(pygame.sprite.Sprite):
             return
         self.gs.factory.data_connection.sendDirection(3)
         self.currentDirection = 3
-        self.updatePlayer()
 
     def move_right(self):
         print("RIGHT")
@@ -196,10 +193,6 @@ class Player(pygame.sprite.Sprite):
             return
         self.gs.factory.data_connection.sendDirection(1)
         self.currentDirection = 1
-        self.updatePlayer()
-
-    def tick(self):
-        pass
 
 class OtherPlayer(pygame.sprite.Sprite):
     def __init__(self, x, y, image, name, gamespace):
@@ -236,8 +229,9 @@ class OtherPlayer(pygame.sprite.Sprite):
 
             # Host player died
             if (data[0] == "dead"):
-                print("Client player wins!")
-
+                self.dead = 1
+                print("TICK: you win!")
+                break
             # Host player changed size
             elif (data[0] == "size"):
                 size = int(data[1])
@@ -316,12 +310,10 @@ class OtherPlayer(pygame.sprite.Sprite):
             self.changedDir = 1
 
 class GameSpace:
-
-    def titleScene(self, factory, who): 
+    def loadScene(self, factory, who): 
         '''Title scene with start button'''
         # Save factory
         self.factory = factory
-
         self.who = who
 
         # Initialize the game space
@@ -335,19 +327,34 @@ class GameSpace:
         self.screen = pygame.display.set_mode(self.size)
         pygame.key.set_repeat(10, 30)
 
+        bigfont = pygame.font.Font(None, 40)
+        self.load = bigfont.render('Loading...', 0, (250, 250, 250))
+        self.loadRect = self.load.get_rect()
+        self.loadRect.topleft = (self.width/2 - self.loadRect.width/2, self.height/2)
+        self.screen.blit(self.load, self.loadRect)
+        pygame.display.flip()
+
+        while (not self.factory.command_connection.checkReady()):
+            print("Loading...")
+
+        self.screen.fill(self.black)
+        pygame.display.flip()
+        self.titleScene()
+
+    def titleScene(self):
         # Menu's game title text
-        font = pygame.font.Font(None, 20)
-        self.startText = font.render('Start', 0, (30, 120, 50))
         bigfont = pygame.font.Font(None, 40)
         self.title = bigfont.render('Game', 0, (250, 250, 250))
-
-        # Menu's start button 
-        self.startButton = pygame.Rect(0, 0, 100, 40)
-        self.startButton.topleft = (self.width/2 - self.startButton.width/2, self.height/2)
-        self.textRect = self.startText.get_rect()
-        self.textRect.topleft = (self.width/2 - self.textRect.width/2, self.height/2 + 10)
         self.titleRect = self.title.get_rect()
         self.titleRect.topleft = (self.width/2 - self.titleRect.width/2, 10)
+
+        # Menu's start button 
+        font = pygame.font.Font(None, 20)
+        self.startText = font.render('Start', 0, (30, 120, 50))
+        self.textRect = self.startText.get_rect()
+        self.textRect.topleft = (self.width/2 - self.textRect.width/2, self.height/2 + 10)
+        self.startButton = pygame.Rect(0, 0, 100, 40)
+        self.startButton.topleft = (self.width/2 - self.startButton.width/2, self.height/2)
         pygame.draw.rect(self.screen, (30, 120, 50), self.startButton, 1)
 
         self.dogetrail = pygame.image.load(mediafile + "dogetrail.png")
@@ -423,21 +430,25 @@ class GameSpace:
         self.screen.blit(self.you.image, self.you.rect)
         self.screen.blit(self.other.image, self.other.rect)
 
-        self.gameboard.printBoard()
-
         # Start game loop
         self.loop = LoopingCall(self.gameloop)
         self.loop.start(1/60)
         print("In game scene: started game loop")
 
     def gameloop(self):
+        print("In game loop")
         numMoves = 0
+
         if self.you.dead:
-            print("You lost")
-            reactor.stop()
+            self.loop.stop()
+            self.loseScene()
+            return
+
         elif self.other.dead:
-            print("You won")
-            reactor.stop()
+            self.loop.stop()
+            self.winScene()
+            return
+
         for event in pygame.event.get():
             # Close pygame
             if event.type == pygame.QUIT:
@@ -471,7 +482,7 @@ class GameSpace:
                         self.you.move_left()
         if numMoves == 0:
             self.you.changedDir = 0
-            self.you.updatePlayer()
+            #self.you.updatePlayer()
     
         for obj in self.all_objects:
             obj.tick()
@@ -512,4 +523,23 @@ class GameSpace:
         self.screen.blit(self.other.image, self.other.rect)
         pygame.display.flip()
 
+    def winScene(self):
+        print("In win scene")
+        bigfont = pygame.font.Font(None, 40)
+        self.endText = bigfont.render('You win!', 0, (250, 250, 250))
+        self.endTextRect = self.endText.get_rect()
+        self.endTextRect.move_ip(self.width/2 - 40, self.height/2)
+        print("Location: {}, {}".format(self.endTextRect.left, self.endTextRect.top))
+        self.screen.blit(self.endText, self.endTextRect)
+        pygame.display.flip()
 
+    def loseScene(self):
+        print("In lose scene")
+        bigfont = pygame.font.Font(None, 40)
+        self.endText = bigfont.render('You lost :(', 0, (250, 250, 250))
+        self.endTextRect = self.endText.get_rect()
+        self.endTextRect.move_ip(self.width/2 - 40, self.height/2)
+
+        print("Location: {}, {}".format(self.endTextRect.left, self.endTextRect.top))
+        self.screen.blit(self.endText, self.endTextRect)
+        pygame.display.flip()
