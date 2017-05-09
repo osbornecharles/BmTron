@@ -1,6 +1,7 @@
 import pygame, sys
 from twisted.internet.task import LoopingCall
 from twisted.internet import reactor
+import json
 
 mediafile = "./mediafiles/"
 CELL_SIZE = 10
@@ -56,7 +57,7 @@ class Player(pygame.sprite.Sprite):
         y = int(self.y / CELL_SIZE)
         return (x, y)
 
-    def tick(self):
+    def tick(self, totalTicks):
 
         x,y = self.get_array_pos()
         boardVal = 0
@@ -189,6 +190,11 @@ class Player(pygame.sprite.Sprite):
                 self.gs.gameboard.board[y][x] = self.trail
                 self.x += moveAmount
             self.rect.topleft = (self.x, self.y)
+            
+            # Synchronize 2 times a second
+            if (not totalTicks % 30):
+                print("Synchronizing")
+                self.gs.factory.data_connection.sendData(self.x, self.y, self.currentDirection)
 
     def move_up(self):
         print("UP")
@@ -251,34 +257,26 @@ class OtherPlayer(pygame.sprite.Sprite):
         y = int(self.y / CELL_SIZE)
         return (x, y)
 
-    def tick(self):
+    def tick(self, totalTicks):
         '''Send location to other player'''
+
         # Retrieve data from host player about Player 1
         dataQueue = self.gs.factory.data_connection.returnData()
         while (not dataQueue.empty()):
-            data = dataQueue.get().split()
+            data = dataQueue.get()
+            data = json.loads(data) # dictionary
 
-            # Host player died
-            if (data[0] == "dead"):
-                self.dead = 1
-                print("TICK: you win!")
-                break
-            # Host player changed size
-            elif (data[0] == "size"):
-                size = int(data[1])
-
-            # Host player got item
-            #elif (data[0] == "item"):
-            #    item = data[1]
-
-            # Host player changed direction
-            elif (data[0] == "direction"):
-                print('got direction', data[1])
-                self.currentDirection = int(data[1][0])
-
-            # Host player changed speed
-            elif (data[0] == "speed"):
-                self.moveAmount = int(data[1])
+            for key, value in data.items():
+                if key == "state":
+                    self.dead = 1
+                    print("TICK: you win!")
+                    return
+                elif key == "x":
+                    self.x = int(value)
+                elif key == "y":
+                    self.y = int(value)
+                elif key == "dir":
+                    self.currentDirection = int(value)
             
         # UPDATE Player 1 (host player) with received data
         x,y = self.get_array_pos()
@@ -472,6 +470,7 @@ class GameSpace:
         '''Actual game!'''
         # Set up game objects
         self.gameboard = Board(self)
+        self.totalTicks = 0
 
         # Host player
         if (self.who == "host"):
@@ -533,7 +532,7 @@ class GameSpace:
                             self.you.move_left()
         
             for obj in self.all_objects:
-                obj.tick()
+                obj.tick(self.totalTicks)
 
             self.screen.fill(self.black)
 
@@ -571,6 +570,8 @@ class GameSpace:
             self.screen.blit(self.you.image, self.you.rect)
             self.screen.blit(self.other.image, self.other.rect)
             pygame.display.flip()
+
+            self.totalTicks += 1
 
     def endScene(self, text):
         self.screen.blit(self.GiantGabe, self.GiantGaberect)

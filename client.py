@@ -7,10 +7,11 @@ from twisted.internet.defer import DeferredQueue
 from twisted.python import log
 from queue import *
 import sys
+import json
 log.startLogging(sys.stdout)
 
-COMMAND_PORT = 41148
-DATA_PORT    = 42148
+COMMAND_PORT = 40440
+DATA_PORT    = 40441
 SERVER = "newt.campus.nd.edu"
 
 # ======================= CONNECTIONS =========================================
@@ -19,9 +20,9 @@ class CommandConnection(Protocol):
     def __init__(self, factory):
         self.factory = factory 
         self.sentStart = False
+        self.receivedStart = False
         self.sentGo = False
         self.receivedGo = False
-        self.receivedStart = False
         self.ready = True
 
     def connectionMade(self):
@@ -34,7 +35,7 @@ class CommandConnection(Protocol):
         self.transport.write("Start pressed".encode())
 
     def sendGo(self):
-        print('go is away')
+        print("go is away")
         self.sentGo = True
         self.transport.write("Go".encode())
 
@@ -58,13 +59,13 @@ class CommandConnection(Protocol):
         elif (data.decode() == "Host quit"):
             print("Command connection: host player quit")
         elif (data.decode() == "Go"):
-            print('got go')
+            print("Command connection: host player sent go")
             self.receivedGo = True
 
     def start(self):
         '''Return true only if both the host and the client players clicked "start"'''
         return self.sentStart and self.receivedStart
-
+    
     def go(self):
         return self.sentGo and self.receivedGo
 
@@ -81,6 +82,7 @@ class DataConnection(Protocol):
 
     def dataReceived(self, data):
         '''Upon receiving data as a string, decode it and return as an array'''
+        print("Data connection: received data from host player", data.decode())
         self.queue.put(data.decode())
 
     def returnData(self):
@@ -93,14 +95,24 @@ class DataConnection(Protocol):
         self.transport.write(beforestr.encode())
 
     def sendDirection(self, direction):
-        beforestr = "direction " + str(direction)
-        self.transport.write(beforestr.encode())
+        data = {"dir": direction}
+        self.transport.write((json.dumps(data)).encode())
 
     def sendCollision(self):
-        self.transport.write("dead".encode())
+        #self.transport.write("dead".encode())
+        data = {}
+        data["state"] = "dead"
+        self.transport.write((json.dumps(data)).encode())
 
     def sendSizeChange(self):
         self.transport.write("size".encode())
+
+    def sendData(self, x, y, direction):
+        data = {}
+        data["x"] = x
+        data["y"] = y
+        data["dir"] = direction
+        self.transport.write((json.dumps(data)).encode())
 
 
 # ==================== CONNECTION FACTORY =====================================
