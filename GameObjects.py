@@ -49,7 +49,6 @@ class Player(pygame.sprite.Sprite):
         self.fast = 0
         self.powerUpTurns = 0
         self.gs = gamespace
-        self.changedDir = 0
         self.gs.gameboard.putOnBoard(self, int(self.x/CELL_SIZE), int(self.y/CELL_SIZE))
 
     def get_array_pos(self):
@@ -124,10 +123,10 @@ class Player(pygame.sprite.Sprite):
                     self.dead = 1
                     self.gs.factory.data_connection.sendCollision()
                     return
-                if moveAmount == 20 and not self.changedDir:
+                if moveAmount == 20:
                     self.gs.gameboard.board[y-1][x] = self.trail
                     self.gs.gameboard.board[y-2][x] = 1
-                elif moveAmount == 30 and not self.changedDir:
+                elif moveAmount == 30:
                     self.gs.gameboard.board[y-1][x] = self.trail
                     self.gs.gameboard.board[y-2][x] = self.trail
                     self.gs.gameboard.board[y-3][x] = 1
@@ -142,10 +141,10 @@ class Player(pygame.sprite.Sprite):
                     self.dead = 1
                     self.gs.factory.data_connection.sendCollision()
                     return
-                if moveAmount == 20 and not self.changedDir:
+                if moveAmount == 20:
                     self.gs.gameboard.board[y+1][x] = self.trail
                     self.gs.gameboard.board[y+2][x] = 1
-                elif moveAmount == 30 and not self.changedDir:
+                elif moveAmount == 30:
                     self.gs.gameboard.board[y+1][x] = self.trail
                     self.gs.gameboard.board[y+2][x] = self.trail
                     self.gs.gameboard.board[y+3][x] = 1
@@ -160,10 +159,10 @@ class Player(pygame.sprite.Sprite):
                     self.dead = 1
                     self.gs.factory.data_connection.sendCollision()
                     return
-                if moveAmount == 20 and not self.changedDir:
+                if moveAmount == 20:
                     self.gs.gameboard.board[y][x-1] = self.trail
                     self.gs.gameboard.board[y][x-2] = 1
-                elif moveAmount == 30 and not self.changedDir:
+                elif moveAmount == 30:
                     self.gs.gameboard.board[y][x-1] = self.trail
                     self.gs.gameboard.board[y][x-2] = self.trail
                     self.gs.gameboard.board[y][x-3] = 1
@@ -178,10 +177,10 @@ class Player(pygame.sprite.Sprite):
                     self.dead = 1
                     self.gs.factory.data_connection.sendCollision()
                     return
-                if moveAmount == 20 and not self.changedDir:
+                if moveAmount == 20:
                     self.gs.gameboard.board[y][x+1] = self.trail
                     self.gs.gameboard.board[y][x+2] = 1
-                elif moveAmount == 30 and not self.changedDir:
+                elif moveAmount == 30:
                     self.gs.gameboard.board[y][x+1] = self.trail
                     self.gs.gameboard.board[y][x+2] = self.trail
                     self.gs.gameboard.board[y][x+3] = 1
@@ -244,7 +243,6 @@ class OtherPlayer(pygame.sprite.Sprite):
             self.currentDirection = 3
             self.trail = 22
         self.moveAmount = 20
-        self.changedDir = 0
         self.gs = gamespace
         self.gs.gameboard.putOnBoard(self, int(self.x/CELL_SIZE), int(self.y/CELL_SIZE))
 
@@ -277,7 +275,6 @@ class OtherPlayer(pygame.sprite.Sprite):
             elif (data[0] == "direction"):
                 print('got direction', data[1])
                 self.currentDirection = int(data[1][0])
-                self.changedDir = 1
 
             # Host player changed speed
             elif (data[0] == "speed"):
@@ -290,40 +287,41 @@ class OtherPlayer(pygame.sprite.Sprite):
                 if self.y - self.moveAmount < 0:
                     self.dead = 1
                     return
-                if self.moveAmount == 20 and not self.changedDir:
-                    self.gs.gameboard.board[y+1][x] = self.trail
-                    self.gs.gameboard.board[y+2][x] = 2 
-                elif self.moveAmount == 30 and not self.changedDir:
-                    self.gs.gameboard.board[y+1][x] = self.trail
-                    self.gs.gameboard.board[y+2][x] = self.trail
-                    self.gs.gameboard.board[y+3][x] = 2
+                if self.moveAmount == 20:
+                    self.gs.gameboard.board[y-1][x] = self.trail
+                    self.gs.gameboard.board[y-2][x] = 2 
+                elif self.moveAmount == 30:
+                    self.gs.gameboard.board[y-1][x] = self.trail
+                    self.gs.gameboard.board[y-2][x] = self.trail
+                    self.gs.gameboard.board[y-3][x] = 2
                 else:
-                    self.gs.gameboard.board[y+1][x] = 2
+                    self.gs.gameboard.board[y-1][x] = 2
+                print('up pos', x, y)
                 self.gs.gameboard.board[y][x] = self.trail
                 self.y -= self.moveAmount 
             elif self.currentDirection == 2:
                 if self.y + self.moveAmount > self.gs.height - CELL_SIZE:
                     self.dead = 1
                     return
-                if self.moveAmount == 20 and not self.changedDir:
-                    self.gs.gameboard.board[y-1][x] = self.trail
-                    self.gs.gameboard.board[y-2][x] = 2 
-                elif self.moveAmount == 30 and not self.changedDir:
-                    self.gs.gameboard.board[y-1][x] = self.trail
-                    self.gs.gameboard.board[y-2][x] = self.trail
-                    self.gs.gameboard.board[y-3][x] = 2
+                if self.moveAmount == 20:
+                    self.gs.gameboard.board[y+1][x] = self.trail
+                    self.gs.gameboard.board[y+2][x] = 2 
+                elif self.moveAmount == 30:
+                    self.gs.gameboard.board[y+1][x] = self.trail
+                    self.gs.gameboard.board[y+2][x] = self.trail
+                    self.gs.gameboard.board[y+3][x] = 2
                 else:
-                    self.gs.gameboard.board[y-1][x] = 2
+                    self.gs.gameboard.board[y+1][x] = 2
                 self.gs.gameboard.board[y][x] = self.trail
                 self.y += self.moveAmount
             elif self.currentDirection == 3:
                 if self.x - self.moveAmount < 0:
                     self.dead = 1
                     return
-                if self.moveAmount == 20 and not self.changedDir:
+                if self.moveAmount == 20:
                     self.gs.gameboard.board[y][x-1] = self.trail
                     self.gs.gameboard.board[y][x-2] = 2 
-                elif self.moveAmount == 30 and not self.changedDir:
+                elif self.moveAmount == 30:
                     self.gs.gameboard.board[y][x-1] = self.trail
                     self.gs.gameboard.board[y][x-2] = self.trail
                     self.gs.gameboard.board[y][x-3] = 2
@@ -335,10 +333,10 @@ class OtherPlayer(pygame.sprite.Sprite):
                 if self.x + self.moveAmount > self.gs.width - CELL_SIZE:
                     self.dead = 1
                     return
-                if self.moveAmount == 20 and not self.changedDir:
+                if self.moveAmount == 20:
                     self.gs.gameboard.board[y][x+1] = self.trail
                     self.gs.gameboard.board[y][x+2] = 2 
-                elif self.moveAmount == 30 and not self.changedDir:
+                elif self.moveAmount == 30:
                     self.gs.gameboard.board[y][x+1] = self.trail
                     self.gs.gameboard.board[y][x+2] = self.trail
                     self.gs.gameboard.board[y][x+3] = 2
@@ -347,7 +345,6 @@ class OtherPlayer(pygame.sprite.Sprite):
                 self.gs.gameboard.board[y][x] = self.trail
                 self.x += self.moveAmount
             self.rect.topleft = (self.x, self.y)
-            self.changedDir = 1
 
 class GameSpace:
     def loadScene(self, factory, who): 
@@ -499,7 +496,6 @@ class GameSpace:
 
     def gameloop(self):
         if self.factory.command_connection.go():
-            numMoves = 0
 
             if self.you.dead:
                 self.loop.stop()
@@ -523,27 +519,18 @@ class GameSpace:
                         self.factory.command_connection.sendEnd()
                         reactor.stop()
                     elif (event.key == pygame.K_UP):
+                        print('pos', self.you.get_array_pos())
                         if self.you.currentDirection != 0:
-                            numMoves += 1
-                            self.you.changedDir = 1
                             self.you.move_up()
                     elif (event.key == pygame.K_DOWN):
                         if self.you.currentDirection != 2:
-                            numMoves += 1
-                            self.you.changedDir = 1
                             self.you.move_down()
                     elif (event.key == pygame.K_RIGHT):
                         if self.you.currentDirection != 1:
-                            numMoves += 1
-                            self.you.changedDir = 1
                             self.you.move_right()
                     elif (event.key == pygame.K_LEFT):
                         if self.you.currentDirection != 3:
-                            numMoves += 1
-                            self.you.changedDir = 1
                             self.you.move_left()
-            if numMoves == 0:
-                self.you.changedDir = 0
         
             for obj in self.all_objects:
                 obj.tick()
