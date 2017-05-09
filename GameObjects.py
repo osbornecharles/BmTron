@@ -57,7 +57,7 @@ class Player(pygame.sprite.Sprite):
         x,y = self.get_array_pos()
         boardVal = 0
         if not self.dead:
-            moveAmount = 20
+            moveAmount = 10
             if self.slow:
                 moveAmount = 10
             elif self.fast:
@@ -215,7 +215,7 @@ class OtherPlayer(pygame.sprite.Sprite):
         else:
             self.currentDirection = 3
             self.trail = 22
-        self.moveAmount = 20
+        self.moveAmount = 10
         self.changedDir = 0
         self.gs = gamespace
         self.gs.gameboard.putOnBoard(self, int(self.x/CELL_SIZE), int(self.y/CELL_SIZE))
@@ -460,10 +460,8 @@ class GameSpace:
         # Start game loop
         self.loop = LoopingCall(self.gameloop)
         self.loop.start(1/60)
-        print("In game scene: started game loop")
 
     def gameloop(self):
-        print("In game loop")
         numMoves = 0
 
         if self.you.dead:
