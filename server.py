@@ -6,7 +6,6 @@ from twisted.internet import reactor
 from twisted.python import log
 from queue import *
 import sys
-#import queue
 log.startLogging(sys.stdout)
 
 COMMAND_PORT = 41148

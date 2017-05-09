@@ -11,7 +11,7 @@ log.startLogging(sys.stdout)
 
 COMMAND_PORT = 41148
 DATA_PORT    = 42148
-SERVER = "ash.campus.nd.edu"
+SERVER = "newt.campus.nd.edu"
 
 # ======================= CONNECTIONS =========================================
 class CommandConnection(Protocol):

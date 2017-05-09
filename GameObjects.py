@@ -311,7 +311,7 @@ class OtherPlayer(pygame.sprite.Sprite):
 
 class GameSpace:
     def loadScene(self, factory, who): 
-        '''Title scene with start button'''
+        '''Loading scene while connections are being established'''
         # Save factory
         self.factory = factory
         self.who = who
@@ -349,11 +349,12 @@ class GameSpace:
             self.titleScene()
 
     def titleScene(self):
+        '''Start scene with button'''
         # Menu's game title text
         bigfont = pygame.font.Font(None, 40)
-        self.title = bigfont.render('Game', 0, (250, 250, 250))
+        self.title = bigfont.render('Gabe vs. Doge', 0, (250, 250, 250))
         self.titleRect = self.title.get_rect()
-        self.titleRect.topleft = (self.width/2 - self.titleRect.width/2, 10)
+        self.titleRect.topleft = (self.width/2 - self.titleRect.width/2, 80)
 
         # Menu's start button 
         font = pygame.font.Font(None, 20)
@@ -371,10 +372,21 @@ class GameSpace:
         self.poop = pygame.image.load(mediafile + "Poop_Emoji.png")
         self.energy = pygame.image.load(mediafile + "5hourenergy.png")
 
+        self.GiantDoge = pygame.image.load(mediafile + "GiantDoge.png")
+        self.GiantDogerect = self.GiantDoge.get_rect()
+        self.GiantDogerect.move_ip(self.width*3/4-80, self.height/2)
+
+        self.GiantGabe = pygame.image.load(mediafile + "GiantGabe.png")
+        self.GiantGaberect = self.GiantGabe.get_rect()
+        self.GiantGaberect.move_ip(30, self.height/2)
+
         # Draw title and startText to screen
         self.screen.blit(self.startText, self.textRect)
         self.screen.blit(self.title, self.titleRect)
+        self.screen.blit(self.GiantGabe, self.GiantGaberect)
+        self.screen.blit(self.GiantDoge, self.GiantDogerect)
         pygame.display.flip()
+
 
         # Start game loop
         self.loop = LoopingCall(self.titleloop)
@@ -403,6 +415,9 @@ class GameSpace:
                         self.factory.command_connection.sendStart()
             self.screen.blit(self.startText, self.textRect)
             self.screen.blit(self.title, self.titleRect)
+            self.screen.blit(self.GiantGabe, self.GiantGaberect)
+            self.screen.blit(self.GiantDoge, self.GiantDogerect)
+
             pygame.display.flip()
         # Transition to game scene
         else:
@@ -448,12 +463,12 @@ class GameSpace:
 
         if self.you.dead:
             self.loop.stop()
-            self.loseScene()
+            self.endScene("You win!")
             return
 
         elif self.other.dead:
             self.loop.stop()
-            self.winScene()
+            self.endScene("You lost :(")
             return
 
         for event in pygame.event.get():
@@ -489,13 +504,13 @@ class GameSpace:
                         self.you.move_left()
         if numMoves == 0:
             self.you.changedDir = 0
-            #self.you.updatePlayer()
     
         for obj in self.all_objects:
             obj.tick()
 
         self.screen.fill(self.black)
 
+        # Draw to screen based on things on board
         for y in range(0, len(self.gameboard.board)):
             for x in range(0, len(self.gameboard.board[0])):
                     if self.gameboard.board[y][x] == 11:
@@ -530,24 +545,31 @@ class GameSpace:
         self.screen.blit(self.other.image, self.other.rect)
         pygame.display.flip()
 
-    def winScene(self):
-        print("In win scene")
+    def endScene(self, text):
+        self.screen.blit(self.GiantGabe, self.GiantGaberect)
+        self.screen.blit(self.GiantDoge, self.GiantDogerect)
+
         bigfont = pygame.font.Font(None, 40)
-        self.endText = bigfont.render('You win!', 0, (250, 250, 250))
+        self.endText = bigfont.render(text, 0, (250, 250, 250))
         self.endTextRect = self.endText.get_rect()
         self.endTextRect.move_ip(self.width/2 - 40, self.height/2)
         print("Location: {}, {}".format(self.endTextRect.left, self.endTextRect.top))
         self.screen.blit(self.endText, self.endTextRect)
         pygame.display.flip()
+        self.loop = LoopingCall(self.endLoop)
+        self.loop.start(1/60)
 
-    def loseScene(self):
-        print("In lose scene")
-        bigfont = pygame.font.Font(None, 40)
-        self.endText = bigfont.render('You lost :(', 0, (250, 250, 250))
-        self.endTextRect = self.endText.get_rect()
-        self.endTextRect.move_ip(self.width/2 - 40, self.height/2)
-
-        print("Location: {}, {}".format(self.endTextRect.left, self.endTextRect.top))
-        self.screen.blit(self.endText, self.endTextRect)
-        pygame.display.flip()
+    def endLoop(self):
+        '''Handle proper closing of game'''
+        for event in pygame.event.get():
+            # Close pygame
+            if event.type == pygame.QUIT:
+                self.factory.command_connection.sendEnd()
+                reactor.stop()
+            # Key detection
+            elif event.type == pygame.KEYDOWN:
+                # Escape key to end pygame
+                if (event.key == pygame.K_ESCAPE):
+                    self.factory.command_connection.sendEnd()
+                    reactor.stop()
 
