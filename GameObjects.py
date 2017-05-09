@@ -328,18 +328,25 @@ class GameSpace:
         pygame.key.set_repeat(10, 30)
 
         bigfont = pygame.font.Font(None, 40)
-        self.load = bigfont.render('Loading...', 0, (250, 250, 250))
+        if (self.who == "host"):
+            text = "Waiting for P2..."
+        else:
+            text = "Waiting for P1..."
+        self.load = bigfont.render(text, 0, (250, 250, 250))
         self.loadRect = self.load.get_rect()
         self.loadRect.topleft = (self.width/2 - self.loadRect.width/2, self.height/2)
         self.screen.blit(self.load, self.loadRect)
         pygame.display.flip()
 
-        while (not self.factory.command_connection.checkReady()):
-            print("Loading...")
-
-        self.screen.fill(self.black)
-        pygame.display.flip()
-        self.titleScene()
+        self.loop = LoopingCall(self.loadLoop)
+        self.loop.start(1/60)
+    
+    def loadLoop(self):
+        if self.factory.command_connection.ready:
+            self.screen.fill(self.black)
+            pygame.display.flip()
+            self.loop.stop()
+            self.titleScene()
 
     def titleScene(self):
         # Menu's game title text
@@ -543,3 +550,4 @@ class GameSpace:
         print("Location: {}, {}".format(self.endTextRect.left, self.endTextRect.top))
         self.screen.blit(self.endText, self.endTextRect)
         pygame.display.flip()
+
