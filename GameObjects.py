@@ -5,7 +5,7 @@ import json
 
 mediafile = "./mediafiles/"
 CELL_SIZE = 10
-SYNC_FREQ = 2
+SYNC_FREQ = 1
 
 class Board():
     def __init__(self, gamespace):
@@ -297,9 +297,9 @@ class OtherPlayer(pygame.sprite.Sprite):
         x,y = self.get_array_pos()
         if not self.dead:
             if self.currentDirection == 0:
-                #if self.y - self.moveAmount < 0:
-                #    self.dead = 1
-                #    return
+                if self.y - self.moveAmount < 0:
+                    #self.dead = 1
+                    return
                 if self.moveAmount == 20:
                     self.gs.gameboard.board[y-1][x] = self.trail
                     self.gs.gameboard.board[y-2][x] = 2 
@@ -312,9 +312,9 @@ class OtherPlayer(pygame.sprite.Sprite):
                 self.gs.gameboard.board[y][x] = self.trail
                 self.y -= self.moveAmount 
             elif self.currentDirection == 2:
-                #if self.y + self.moveAmount > self.gs.height - CELL_SIZE:
-                #    self.dead = 1
-                #    return
+                if self.y + self.moveAmount > self.gs.height - CELL_SIZE:
+                    #self.dead = 1
+                    return
                 if self.moveAmount == 20:
                     self.gs.gameboard.board[y+1][x] = self.trail
                     self.gs.gameboard.board[y+2][x] = 2 
@@ -327,9 +327,9 @@ class OtherPlayer(pygame.sprite.Sprite):
                 self.gs.gameboard.board[y][x] = self.trail
                 self.y += self.moveAmount
             elif self.currentDirection == 3:
-                #if self.x - self.moveAmount < 0:
-                #    self.dead = 1
-                #    return
+                if self.x - self.moveAmount < 0:
+                    #self.dead = 1
+                    return
                 if self.moveAmount == 20:
                     self.gs.gameboard.board[y][x-1] = self.trail
                     self.gs.gameboard.board[y][x-2] = 2 
@@ -342,9 +342,9 @@ class OtherPlayer(pygame.sprite.Sprite):
                 self.gs.gameboard.board[y][x] = self.trail
                 self.x -= self.moveAmount
             else:
-                #if self.x + self.moveAmount > self.gs.width - CELL_SIZE:
-                #    self.dead = 1
-                #    return
+                if self.x + self.moveAmount > self.gs.width - CELL_SIZE:
+                    #self.dead = 1
+                    return
                 if self.moveAmount == 20:
                     self.gs.gameboard.board[y][x+1] = self.trail
                     self.gs.gameboard.board[y][x+2] = 2 
@@ -503,87 +503,85 @@ class GameSpace:
 
         # Start game loop
         self.loop = LoopingCall(self.gameloop)
-        self.factory.command_connection.sendGo()
         self.loop.start(1/60)
 
     def gameloop(self):
-        if self.factory.command_connection.go():
 
-            if self.you.dead:
-                self.loop.stop()
-                self.endScene("You lost :(")
-                return
+        if self.you.dead:
+            self.loop.stop()
+            self.endScene("You lost :(")
+            return
 
-            elif self.other.dead:
-                self.loop.stop()
-                self.endScene("You win!")
-                return
+        elif self.other.dead:
+            self.loop.stop()
+            self.endScene("You win!")
+            return
 
-            for event in pygame.event.get():
-                # Close pygame
-                if event.type == pygame.QUIT:
+        for event in pygame.event.get():
+            # Close pygame
+            if event.type == pygame.QUIT:
+                self.factory.command_connection.sendEnd()
+                reactor.stop()
+            # Key detection
+            elif event.type == pygame.KEYDOWN:
+                # Escape key to end pygame
+                if (event.key == pygame.K_ESCAPE):
                     self.factory.command_connection.sendEnd()
                     reactor.stop()
-                # Key detection
-                elif event.type == pygame.KEYDOWN:
-                    # Escape key to end pygame
-                    if (event.key == pygame.K_ESCAPE):
-                        self.factory.command_connection.sendEnd()
-                        reactor.stop()
-                    elif (event.key == pygame.K_UP):
-                        if self.you.currentDirection != 0:
-                            self.you.move_up(self.totalTicks)
-                    elif (event.key == pygame.K_DOWN):
-                        if self.you.currentDirection != 2:
-                            self.you.move_down(self.totalTicks)
-                    elif (event.key == pygame.K_RIGHT):
-                        if self.you.currentDirection != 1:
-                            self.you.move_right(self.totalTicks)
-                    elif (event.key == pygame.K_LEFT):
-                        if self.you.currentDirection != 3:
-                            self.you.move_left(self.totalTicks)
-        
-            for obj in self.all_objects:
-                obj.tick(self.totalTicks)
+                elif (event.key == pygame.K_UP):
+                    if self.you.currentDirection != 0:
+                        self.you.move_up(self.totalTicks)
+                elif (event.key == pygame.K_DOWN):
+                    if self.you.currentDirection != 2:
+                        self.you.move_down(self.totalTicks)
+                elif (event.key == pygame.K_RIGHT):
+                    if self.you.currentDirection != 1:
+                        self.you.move_right(self.totalTicks)
+                elif (event.key == pygame.K_LEFT):
+                    if self.you.currentDirection != 3:
+                        self.you.move_left(self.totalTicks)
+    
+        for obj in self.all_objects:
+            obj.tick(self.totalTicks)
 
-            self.screen.fill(self.black)
+        self.screen.fill(self.black)
 
-            # Draw to screen based on things on board
-            for y in range(0, len(self.gameboard.board)):
-                for x in range(0, len(self.gameboard.board[0])):
-                        if self.gameboard.board[y][x] == 11:
-                            tup = self.get_real_pos(y, x)
-                            img = self.gabetrail
-                            rect = img.get_rect()
-                            rect.topleft = tup 
-                            self.screen.blit(img, rect)
-                        elif self.gameboard.board[y][x] == 22:
-                            tup = self.get_real_pos(y, x)
-                            img = self.dogetrail
-                            rect = img.get_rect()
-                            rect.topleft = tup 
-                            self.screen.blit(img, rect)
-                        elif self.gameboard.board[y][x] == 3:
-                            tup = self.get_real_pos(y, x)
-                            rect = self.taco.get_rect()
-                            rect.topleft = tup
-                            self.screen.blit(self.taco, rect)
-                        elif self.gameboard.board[y][x] == 4:
-                            tup = get_real_pos(y, x)
-                            rect = self.poop.get_rect()
-                            rect.topleft = tup 
-                            self.screen.blit(self.poop, rect)
-                        elif self.gameboard.board[y][x] == 5:
-                            tup = get_real_pos(y, x)
-                            rect = self.energy.get_rect()
-                            rect.topleft = tup 
-                            self.screen.blit(self.energy, rect)
-                            
-            self.screen.blit(self.you.image, self.you.rect)
-            self.screen.blit(self.other.image, self.other.rect)
-            pygame.display.flip()
+        # Draw to screen based on things on board
+        for y in range(0, len(self.gameboard.board)):
+            for x in range(0, len(self.gameboard.board[0])):
+                    if self.gameboard.board[y][x] == 11:
+                        tup = self.get_real_pos(y, x)
+                        img = self.gabetrail
+                        rect = img.get_rect()
+                        rect.topleft = tup 
+                        self.screen.blit(img, rect)
+                    elif self.gameboard.board[y][x] == 22:
+                        tup = self.get_real_pos(y, x)
+                        img = self.dogetrail
+                        rect = img.get_rect()
+                        rect.topleft = tup 
+                        self.screen.blit(img, rect)
+                    elif self.gameboard.board[y][x] == 3:
+                        tup = self.get_real_pos(y, x)
+                        rect = self.taco.get_rect()
+                        rect.topleft = tup
+                        self.screen.blit(self.taco, rect)
+                    elif self.gameboard.board[y][x] == 4:
+                        tup = get_real_pos(y, x)
+                        rect = self.poop.get_rect()
+                        rect.topleft = tup 
+                        self.screen.blit(self.poop, rect)
+                    elif self.gameboard.board[y][x] == 5:
+                        tup = get_real_pos(y, x)
+                        rect = self.energy.get_rect()
+                        rect.topleft = tup 
+                        self.screen.blit(self.energy, rect)
+                        
+        self.screen.blit(self.you.image, self.you.rect)
+        self.screen.blit(self.other.image, self.other.rect)
+        pygame.display.flip()
 
-            self.totalTicks += 1
+        self.totalTicks += 1
 
     def endScene(self, text):
         self.screen.blit(self.GiantGabe, self.GiantGaberect)
