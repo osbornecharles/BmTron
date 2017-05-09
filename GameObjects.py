@@ -25,13 +25,6 @@ class Board():
     def deleteFromBoard(self, x, y):
         self.board[y][x] = 0
 
-    def printBoard(self):
-        for y in range(len(self.board)):
-            for x in range(len(self.board[0])):
-                print("| {}".format(self.board[y][x]), end = '')
-            print ("\n---------------------------------------------------------------------------------------------------------------------------------")
-
-
 class Player(pygame.sprite.Sprite):
     def __init__(self, x, y, image, name, gamespace):
         pygame.sprite.Sprite.__init__(self)
@@ -463,12 +456,12 @@ class GameSpace:
 
         if self.you.dead:
             self.loop.stop()
-            self.endScene("You win!")
+            self.endScene("You lost :(")
             return
 
         elif self.other.dead:
             self.loop.stop()
-            self.endScene("You lost :(")
+            self.endScene("You win!")
             return
 
         for event in pygame.event.get():
