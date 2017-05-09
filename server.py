@@ -82,7 +82,6 @@ class DataConnection(Protocol):
     def sendSizeChange(self):
         self.transport.write("size".encode())
 
-
 # ======================= CONNECTION FACTORY ==================================
 class CommandConnectionFactory(ServerFactory):
     '''Generates command connection'''

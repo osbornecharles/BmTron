@@ -127,6 +127,7 @@ class Player(pygame.sprite.Sprite):
                 self.x += moveAmount
             self.rect.topleft = (self.x, self.y)
         self.powerUpTurns -= 1
+        print('boardval', boardVal)
         if self.powerUpTurns <= 0:
             self.powerUpTurns = 0
             self.fat = 0
@@ -139,6 +140,7 @@ class Player(pygame.sprite.Sprite):
             self.dead = 1
             self.gs.factory.data_connection.sendCollision()
         elif boardVal == 11 or boardVal == 22:
+            print('IMDEAD')
             self.dead = 1
             self.gs.factory.data_connection.sendCollision()
         elif boardVal == self.trail:
@@ -236,7 +238,8 @@ class OtherPlayer(pygame.sprite.Sprite):
 
             # Host player died
             if (data[0] == "dead"):
-                print("Client player wins!")
+                self.dead = 1
+                print('Other player dead')
 
             # Host player changed size
             elif (data[0] == "size"):
@@ -434,10 +437,10 @@ class GameSpace:
         numMoves = 0
         if self.you.dead:
             print("You lost")
-            reactor.stop()
+            #reactor.stop()
         elif self.other.dead:
             print("You won")
-            reactor.stop()
+            #reactor.stop()
         for event in pygame.event.get():
             # Close pygame
             if event.type == pygame.QUIT:
