@@ -5,7 +5,7 @@ import json
 
 mediafile = "./mediafiles/"
 CELL_SIZE = 10
-SYNC_FREQ = 5
+SYNC_FREQ = 2
 
 class Board():
     def __init__(self, gamespace):
