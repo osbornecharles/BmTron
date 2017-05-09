@@ -277,6 +277,7 @@ class OtherPlayer(pygame.sprite.Sprite):
                 data = json.loads(data) # dictionary
             except:
                 print("OtherPlayer: could not decode data {}".format(data))
+                continue
 
             for key, value in data.items():
                 if key == "state":
