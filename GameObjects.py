@@ -5,7 +5,7 @@ import json
 
 mediafile = "./mediafiles/"
 CELL_SIZE = 10
-SYNC_FREQ = 1
+SYNC_FREQ = 2
 
 class Board():
     def __init__(self, gamespace):
@@ -81,7 +81,7 @@ class Player(pygame.sprite.Sprite):
                 boardVal2 = self.gs.gameboard.board[y+2][x]
             except IndexError:
                 pass
-        elif self.currentDirection == 3
+        elif self.currentDirection == 3:
             try:
                 boardVal = self.gs.gameboard.board[y][x-1]
                 boardVal2 = self.gs.gameboard.board[y][x-2]
