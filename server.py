@@ -100,7 +100,7 @@ class DataConnection(Protocol):
     def sendSizeChange(self):
         self.transport.write("size".encode())
 
-    def sendData(self, x, y, direction, speed):
+    def sendData(self, x, y, direction, speed, dead):
         data = {}
         data["x"] = x
         data["y"] = y
