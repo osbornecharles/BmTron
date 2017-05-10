@@ -195,7 +195,7 @@ class Player(pygame.sprite.Sprite):
         # Synchronize 2 times a second
         if (not totalTicks % SYNC_FREQ):
             print("Synchronizing: {}".format(totalTicks))
-            self.gs.factory.data_connection.sendData(self.x, self.y, self.currentDirection, self.moveAmount)
+            self.gs.factory.data_connection.sendData(self.x, self.y, self.currentDirection, self.moveAmount, self.dead)
 
     def move_up(self, totalTicks):
         if self.currentDirection == 2:
@@ -206,7 +206,7 @@ class Player(pygame.sprite.Sprite):
         if (totalTicks % SYNC_FREQ):
             print("UP: {}".format(totalTicks))
             #self.gs.factory.data_connection.sendDirection(0)
-            self.gs.factory.data_connection.sendData(self.x, self.y, self.currentDirection, self.moveAmount)
+            self.gs.factory.data_connection.sendData(self.x, self.y, self.currentDirection, self.moveAmount, self.dead)
 
     def move_down(self, totalTicks): 
         if self.currentDirection == 0:
@@ -217,7 +217,7 @@ class Player(pygame.sprite.Sprite):
         if (totalTicks % SYNC_FREQ):
             print("DOWN: {}".format(totalTicks))
             #self.gs.factory.data_connection.sendDirection(2)
-            self.gs.factory.data_connection.sendData(self.x, self.y, self.currentDirection, self.moveAmount)
+            self.gs.factory.data_connection.sendData(self.x, self.y, self.currentDirection, self.moveAmount, self.dead)
 
     def move_left(self, totalTicks): 
         if self.currentDirection == 1:
@@ -228,7 +228,7 @@ class Player(pygame.sprite.Sprite):
         if (totalTicks % SYNC_FREQ):
             print("LEFT: {}".format(totalTicks))
             #self.gs.factory.data_connection.sendDirection(3)
-            self.gs.factory.data_connection.sendData(self.x, self.y, self.currentDirection, self.moveAmount)
+            self.gs.factory.data_connection.sendData(self.x, self.y, self.currentDirection, self.moveAmount, self.dead)
 
     def move_right(self, totalTicks):
         if self.currentDirection == 3:
@@ -239,7 +239,7 @@ class Player(pygame.sprite.Sprite):
         if (totalTicks % SYNC_FREQ):
             print("RIGHT: {}".format(totalTicks))
             #self.gs.factory.data_connection.sendDirection(1)
-            self.gs.factory.data_connection.sendData(self.x, self.y, self.currentDirection, self.moveAmount)
+            self.gs.factory.data_connection.sendData(self.x, self.y, self.currentDirection, self.moveAmount, self.dead)
 
 class OtherPlayer(pygame.sprite.Sprite):
     def __init__(self, x, y, image, name, gamespace):
@@ -292,6 +292,8 @@ class OtherPlayer(pygame.sprite.Sprite):
                     self.currentDirection = int(value)
                 elif key == "speed":
                     self.moveAmount = int(value)
+                elif key == "dead":
+                    self.dead = int(value)
             
         # UPDATE other player with received data
         x,y = self.get_array_pos()

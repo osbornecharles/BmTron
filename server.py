@@ -106,6 +106,7 @@ class DataConnection(Protocol):
         data["y"] = y
         data["dir"] = direction
         data["speed"] = speed
+        data["dead"] = dead
         self.transport.write((json.dumps(data)).encode())
 
 
