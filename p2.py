@@ -4,7 +4,7 @@ from client import *
 from GameObjects import * 
 
 COMMAND_PORT = 40440
-SERVER = "newt.campus.nd.edu"
+SERVER = "ash.campus.nd.edu"
 
 if __name__ == "__main__":
     # Instantiate CommandConnectionFactory 

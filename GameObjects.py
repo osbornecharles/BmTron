@@ -8,6 +8,7 @@ CELL_SIZE = 10
 SYNC_FREQ = 2
 
 class Board():
+    '''Game board to hold position of characters and their trails'''
     def __init__(self, gamespace):
         self.gs = gamespace
         self.board = []
@@ -21,7 +22,6 @@ class Board():
         print('board width', len(self.board[0]))
 
     def putOnBoard(self, thing, x, y):
-        print("{} at x = {}, y = {}".format(thing.name, x,y))
         if (thing.name == "gabe"):
             self.board[int(y)][int(x)] = 1
         elif (thing.name == "doge"):
@@ -31,6 +31,7 @@ class Board():
         self.board[y][x] = 0
 
 class Player(pygame.sprite.Sprite):
+    '''You as the player!'''
     def __init__(self, x, y, image, name, gamespace):
         pygame.sprite.Sprite.__init__(self)
         self.x = x
@@ -53,8 +54,9 @@ class Player(pygame.sprite.Sprite):
         self.gs = gamespace
         self.gs.gameboard.putOnBoard(self, int(self.x/CELL_SIZE), int(self.y/CELL_SIZE))
         self.moveAmount = 20
-
+        
     def get_array_pos(self):
+        '''Return board position given position in game window'''
         x = int(self.x / CELL_SIZE)
         y = int(self.y / CELL_SIZE)
         return (x, y)
@@ -63,6 +65,8 @@ class Player(pygame.sprite.Sprite):
         x,y = self.get_array_pos()
         boardVal = 0
         boardVal2 = 0
+
+        # Check if board cells are valid
         if self.currentDirection == 0: 
             try:
                 boardVal = self.gs.gameboard.board[y-1][x]
@@ -111,21 +115,23 @@ class Player(pygame.sprite.Sprite):
             self.dead = 1
             self.gs.factory.data_connection.sendCollision()
             return
+        # Got the taco or pizza
         elif boardVal == 3 or boardVal2 == 3:
             self.fat = 1
             self.powerUpTurns = 5
             self.gs.factory.data_connection.sendSizeChange()
+        # Stepped into dog poop
         elif boardVal == 4 or boardVal2 == 4:
             self.slow = 1
             self.gs.factory.data_connection.sendSpeed(10)
             self.powerUpTurns = 5
+        # Got energy drink
         elif boardVal == 5 or boardVal2 == 5:
             self.fast = 1
             self.gs.factory.data_connection.sendSpeed(30)
             self.powerUpTurns = 5
 
         if not self.dead:
-            #moveAmount = 20
             if self.slow:
                 self.moveAmount = 10
             elif self.fast:
@@ -204,7 +210,7 @@ class Player(pygame.sprite.Sprite):
                 self.x += self.moveAmount
             self.rect.topleft = (self.x, self.y)
             
-        # Synchronize 2 times a second
+        # Synchronize 30 times a second
         if (not totalTicks % SYNC_FREQ):
             print("Synchronizing: {}".format(totalTicks))
             self.gs.factory.data_connection.sendData(self.x, self.y, self.currentDirection, self.moveAmount, self.dead)
@@ -217,7 +223,6 @@ class Player(pygame.sprite.Sprite):
         self.currentDirection = 0
         if (totalTicks % SYNC_FREQ):
             print("UP: {}".format(totalTicks))
-            #self.gs.factory.data_connection.sendDirection(0)
             self.gs.factory.data_connection.sendData(self.x, self.y, self.currentDirection, self.moveAmount, self.dead)
 
     def move_down(self, totalTicks): 
@@ -228,7 +233,6 @@ class Player(pygame.sprite.Sprite):
         self.currentDirection = 2
         if (totalTicks % SYNC_FREQ):
             print("DOWN: {}".format(totalTicks))
-            #self.gs.factory.data_connection.sendDirection(2)
             self.gs.factory.data_connection.sendData(self.x, self.y, self.currentDirection, self.moveAmount, self.dead)
 
     def move_left(self, totalTicks): 
@@ -239,7 +243,6 @@ class Player(pygame.sprite.Sprite):
         self.currentDirection = 3
         if (totalTicks % SYNC_FREQ):
             print("LEFT: {}".format(totalTicks))
-            #self.gs.factory.data_connection.sendDirection(3)
             self.gs.factory.data_connection.sendData(self.x, self.y, self.currentDirection, self.moveAmount, self.dead)
 
     def move_right(self, totalTicks):
@@ -250,10 +253,10 @@ class Player(pygame.sprite.Sprite):
         self.currentDirection = 1
         if (totalTicks % SYNC_FREQ):
             print("RIGHT: {}".format(totalTicks))
-            #self.gs.factory.data_connection.sendDirection(1)
             self.gs.factory.data_connection.sendData(self.x, self.y, self.currentDirection, self.moveAmount, self.dead)
 
 class OtherPlayer(pygame.sprite.Sprite):
+    '''Other player's movements are dictated by what is sent from the other player'''
     def __init__(self, x, y, image, name, gamespace):
         pygame.sprite.Sprite.__init__(self)
         self.x = x
@@ -310,9 +313,9 @@ class OtherPlayer(pygame.sprite.Sprite):
         # UPDATE other player with received data
         x,y = self.get_array_pos()
         if not self.dead:
+            # Other player moving up 
             if self.currentDirection == 0:
                 if self.y - self.moveAmount < 0:
-                    #self.dead = 1
                     return
                 if self.moveAmount == 20:
                     self.gs.gameboard.board[y-1][x] = self.trail
@@ -325,9 +328,9 @@ class OtherPlayer(pygame.sprite.Sprite):
                     self.gs.gameboard.board[y-1][x] = 2
                 self.gs.gameboard.board[y][x] = self.trail
                 self.y -= self.moveAmount 
+            # Other player moving down
             elif self.currentDirection == 2:
                 if self.y + self.moveAmount > self.gs.height - CELL_SIZE:
-                    #self.dead = 1
                     return
                 if self.moveAmount == 20:
                     self.gs.gameboard.board[y+1][x] = self.trail
@@ -340,9 +343,9 @@ class OtherPlayer(pygame.sprite.Sprite):
                     self.gs.gameboard.board[y+1][x] = 2
                 self.gs.gameboard.board[y][x] = self.trail
                 self.y += self.moveAmount
+            # Other player moving left
             elif self.currentDirection == 3:
                 if self.x - self.moveAmount < 0:
-                    #self.dead = 1
                     return
                 if self.moveAmount == 20:
                     self.gs.gameboard.board[y][x-1] = self.trail
@@ -355,9 +358,9 @@ class OtherPlayer(pygame.sprite.Sprite):
                     self.gs.gameboard.board[y][x-1] = 2
                 self.gs.gameboard.board[y][x] = self.trail
                 self.x -= self.moveAmount
+            # Other player moving right
             else:
                 if self.x + self.moveAmount > self.gs.width - CELL_SIZE:
-                    #self.dead = 1
                     return
                 if self.moveAmount == 20:
                     self.gs.gameboard.board[y][x+1] = self.trail
@@ -411,6 +414,16 @@ class GameSpace:
             self.loop.stop()
             self.titleScene()
 
+        for event in pygame.event.get():
+            # Close pygame
+            if event.type == pygame.QUIT:
+                reactor.stop()
+            # Key detection
+            elif event.type == pygame.KEYDOWN:
+                # Escape key to end pygame
+                if (event.key == pygame.K_ESCAPE):
+                    reactor.stop()
+
     def titleScene(self):
         '''Start scene with button'''
         # Menu's game title text
@@ -428,6 +441,7 @@ class GameSpace:
         self.startButton.topleft = (self.width/2 - self.startButton.width/2, self.height/2)
         pygame.draw.rect(self.screen, (30, 120, 50), self.startButton, 1)
 
+        # Game items
         self.dogetrail = pygame.image.load(mediafile + "dogetrail.png")
         self.gabetrail = pygame.image.load(mediafile + "gabetrail.png")
         self.taco = pygame.image.load(mediafile + "Taco_Emoji.png")
@@ -435,10 +449,10 @@ class GameSpace:
         self.poop = pygame.image.load(mediafile + "Poop_Emoji.png")
         self.energy = pygame.image.load(mediafile + "5hourenergy.png")
 
+        # Pretty pictures for scene
         self.GiantDoge = pygame.image.load(mediafile + "GiantDoge.png")
         self.GiantDogerect = self.GiantDoge.get_rect()
         self.GiantDogerect.move_ip(self.width*3/4-80, self.height/2)
-
         self.GiantGabe = pygame.image.load(mediafile + "GiantGabe.png")
         self.GiantGaberect = self.GiantGabe.get_rect()
         self.GiantGaberect.move_ip(30, self.height/2)
@@ -449,7 +463,6 @@ class GameSpace:
         self.screen.blit(self.GiantGabe, self.GiantGaberect)
         self.screen.blit(self.GiantDoge, self.GiantDogerect)
         pygame.display.flip()
-
 
         # Start game loop
         self.loop = LoopingCall(self.titleloop)
@@ -491,6 +504,7 @@ class GameSpace:
             self.gameScene()
 
     def get_real_pos(self, y, x):
+        '''Translate board position to game window position'''
         return (x*CELL_SIZE, y*CELL_SIZE)
 
     def gameScene(self):
@@ -600,7 +614,6 @@ class GameSpace:
     def endScene(self, text):
         self.screen.blit(self.GiantGabe, self.GiantGaberect)
         self.screen.blit(self.GiantDoge, self.GiantDogerect)
-
         bigfont = pygame.font.Font(None, 40)
         self.endText = bigfont.render(text, 0, (250, 250, 250))
         self.endTextRect = self.endText.get_rect()

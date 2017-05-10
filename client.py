@@ -12,7 +12,7 @@ log.startLogging(sys.stdout)
 
 COMMAND_PORT = 40440
 DATA_PORT    = 40441
-SERVER = "newt.campus.nd.edu"
+SERVER = "ash.campus.nd.edu"
 
 # ======================= CONNECTIONS =========================================
 class CommandConnection(Protocol):
@@ -23,7 +23,7 @@ class CommandConnection(Protocol):
         self.receivedStart = False
         self.sentGo = False
         self.receivedGo = False
-        self.ready = True
+        self.ready = False
 
     def connectionMade(self):
         print("Command connection: created from host player to client player")
@@ -61,6 +61,8 @@ class CommandConnection(Protocol):
         elif (data.decode() == "Go"):
             print("Command connection: host player sent go")
             self.receivedGo = True
+        elif (data.decode() == "Connections established"):
+            self.ready = True
 
     def start(self):
         '''Return true only if both the host and the client players clicked "start"'''

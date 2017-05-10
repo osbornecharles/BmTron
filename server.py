@@ -73,6 +73,7 @@ class DataConnection(Protocol):
     def connectionMade(self):
         '''Upon establishing data connection, start forwarding what is in client connection's queue'''
         print("Data conection: Created connection between host and client players")
+        self.factory.command_connection.transport.write("Connections established".encode())
 
     def dataReceived(self, data):
         '''Use client conection to forward data from work.py to client'''
@@ -133,7 +134,7 @@ class CommandConnectionFactory(ServerFactory):
 class DataConnectionFactory(ServerFactory):
     '''Generates data connection'''
     def __init__(self, factory):
-        #self.command_connection = factory.command_connection
+        self.command_connection = factory.command_connection
         self.data_connection = DataConnection(self)
         factory.data_connection = self.data_connection
 
