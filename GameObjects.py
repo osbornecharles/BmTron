@@ -63,18 +63,30 @@ class Player(pygame.sprite.Sprite):
         x,y = self.get_array_pos()
         boardVal = 0
         boardVal2 = 0
-        if self.currentDirection == 0 and self.gs.gameboard.board[y-2][x]:
-            boardVal = self.gs.gameboard.board[y-1][x]
-            boardVal2 = self.gs.gameboard.board[y-2][x]
-        elif self.currentDirection == 1 and self.gs.gameboard.board[y][x+2]:
-            boardVal = self.gs.gameboard.board[y][x+1]
-            boardVal2 = self.gs.gameboard.board[y][x+2]
-        elif self.currentDirection == 2 and self.gs.gameboard.board[y+2][x]:
-            boardVal = self.gs.gameboard.board[y+1][x]
-            boardVal2 = self.gs.gameboard.board[y+2][x]
-        elif self.currentDirection == 3 and self.gs.gameboard.board[y][x-2]:
-            boardVal = self.gs.gameboard.board[y][x-1]
-            boardVal2 = self.gs.gameboard.board[y][x-2]
+        if self.currentDirection == 0: 
+            try:
+                boardVal = self.gs.gameboard.board[y-1][x]
+                boardVal2 = self.gs.gameboard.board[y-2][x]
+            except IndexError:
+                pass
+        elif self.currentDirection == 1:
+            try:
+                boardVal = self.gs.gameboard.board[y][x+1]
+                boardVal2 = self.gs.gameboard.board[y][x+2]
+            except IndexError:
+                pass
+        elif self.currentDirection == 2:
+            try:
+                boardVal = self.gs.gameboard.board[y+1][x]
+                boardVal2 = self.gs.gameboard.board[y+2][x]
+            except IndexError:
+                pass
+        elif self.currentDirection == 3
+            try:
+                boardVal = self.gs.gameboard.board[y][x-1]
+                boardVal2 = self.gs.gameboard.board[y][x-2]
+            except IndexError:
+                pass
 
         self.powerUpTurns -= 1
         if self.powerUpTurns <= 0:
